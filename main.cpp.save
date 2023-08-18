@@ -15,7 +15,7 @@ void get_input(double *p_a, double *p_b, double *p_c);
 //получает коэффициенты, старается добиться правильного ввода
 
 void clear_buf(void);
-//старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввоода
+//кушает весь ввод включительно до непробельного символа из стандартного ввоода
 
 int main(void)
 {
@@ -33,7 +33,8 @@ int main(void)
     {
         case 't':
             printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
-            //break; !!!ВРЕМЕННО
+            //вызов функции?
+            break;
         default:
             get_input(&a, &b, &c);
             printf("%lf %lf %lf", a, b, c);
