@@ -14,7 +14,18 @@ SQUARE SOLVER, также известная как квадратка
 #include <float.h>
 #include <math.h>
 
-int solve(double a, double b, double c, double *p_x1, double *p_x2);
+enum SOLVE_RES 
+{
+    ZERO_ROOTS,
+    ONE_ROOT,
+    TWO_ROOTS,
+    NO_REAL_SOLUTION,
+    LINEAL_ROOT,
+    INFINITE_SOLUTIONS,
+    ERROR,
+}
+
+enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2);
 //получает коэфф и записывает корни в x1 и x2, возвращает кол-во корней,
 //то есть при возврате 1 x1=x2, при 0 в x1 и x2 неопределенное значение,
 //возврат -1 означает ошибку
@@ -43,32 +54,58 @@ int main(void)
     }
 
     get_input(&a, &b, &c);
-    
-    double x1, x2; 
-    int res = solve(a, b, c, &x1, &x2);
-    
+
+    double x1, x2;
+    enum SOLVE_RES res = solve(a, b, c, &x1, &x2);
+
     switch (res)
     {
-        case 2:
-            printf("Here are two roots: %lf %lf\n", x1, x2);
+        case TWO_ROOTS:
+            printf("Here are two roots: %lg %lg\n", x1, x2);
             break;
-        case 1:
-            printf("Here are two identical roots: %lf %lf\n", x1, x2);
-        case 0:
-            print("There are no real roots... And I don't have imagination "
+        case ONE_ROOT:
+            printf("Here are two identical roots: %lg %lg\n", x1, x2);
+            break;
+        case ZERO_ROOTS:
+            printf("There are no real roots... And I don't have imagination "
             "to compute complex ones.\n");
-        case -1:
+            break;
+        case ERROR:
+            printf("Well, some error occurred during solving the equation.\n");
+            break;
+        case NO_SOLUTION:
+            printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
+            break;
+        case LINEAL_ROOT:
         
+            break;
+        default:
+            printf("Somehow method \"solve\" returned unsupported value...\n");
     }
 
     return 0;
 }
 
-int solve(double a, double b, double c, double *p_x1, double *p_x2)
+enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2)
 {
     /*
-    Примечание: похоже что math.h работает только
+    Примечание: похоже что math.h работает только с double, поэтому нет смысла пытаться
+    считать дискриминант как long double?
     */
+
+    //особые случаи
+    if ( fabs(a) < DBL_EPSILON ) //a == 0
+    {
+        if ( fabs(b) < DBL_EPSILON ) //b == 0
+        {
+            if ( fabs(c) < DBL_EPSILON )//c == 0
+            {
+
+            }
+        }
+    }
+
+    //обычные случаи
     double discriminant = b*b - 4.0*a*c;
 
     if ( discriminant > 0.0 )//D > 0
@@ -80,7 +117,7 @@ int solve(double a, double b, double c, double *p_x1, double *p_x2)
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
         *p_x1 = -b / (2.0*a);
-        *p_x1 = *p_x2;
+        *p_x2 = *p_x1;
         return 1;
     }
     else if (discriminant < 0.0)//D < 0
