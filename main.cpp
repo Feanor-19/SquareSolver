@@ -26,9 +26,7 @@ enum SOLVE_RES
 };
 
 enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2);
-//получает коэфф и записывает корни в x1 и x2, возвращает кол-во корней,
-//то есть при возврате 1 x1=x2, при 0 в x1 и x2 неопределенное значение,
-//возврат -1 означает ошибку
+//получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
 
 void get_input(double *p_a, double *p_b, double *p_c);
 //получает коэффициенты, старается добиться правильного ввода
@@ -53,45 +51,60 @@ int main(void)
         //break; !!!ВРЕМЕННО
     }
 
-    get_input(&a, &b, &c);
-
-    double x1, x2;
-    enum SOLVE_RES res = solve(a, b, c, &x1, &x2);
-
-    switch (res)
+    while (1)//выход через return
     {
-        case TWO_REAL_ROOTS:
-            printf("Here are two roots: %lg %lg\n", x1, x2);
-            break;
-        case ONE_REAL_ROOT:
-            printf("Here are two identical roots: %lg %lg\n", x1, x2);
-            break;
-        case ZERO_REAL_ROOTS:
-            printf("There are no real roots... And I don't have imagination "
-            "to compute complex ones.\n");
-            break;
-        case ERROR:
-            printf("Well, some error occurred during solving the equation.\n");
-            break;
-        case NO_SOLUTION:
-            printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
-            break;
-        case LINEAL_ROOT:
-            printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", x1);
-            break;
-        case INFINITE_SOLUTIONS:
-            printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
-            break;
-        default:
-            printf("Somehow function \"solve\" returned unsupported value...\n");
-    }
+        get_input(&a, &b, &c);
 
+        double x1, x2;
+        enum SOLVE_RES res = solve(a, b, c, &x1, &x2);
+
+        switch (res)
+        {
+            case TWO_REAL_ROOTS:
+                printf("Here are two roots: %lg %lg\n", x1, x2);
+                break;
+            case ONE_REAL_ROOT:
+                printf("Here are two identical roots: %lg %lg\n", x1, x2);
+                break;
+            case ZERO_REAL_ROOTS:
+                printf("There are no real roots... And I don't have imagination "
+                "to compute complex ones.\n");
+                break;
+            case ERROR:
+                printf("Well, some error occurred during solving the equation.\n");
+                break;
+            case NO_SOLUTION:
+                printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
+                break;
+            case LINEAL_ROOT:
+                printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", x1);
+                break;
+            case INFINITE_SOLUTIONS:
+                printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
+                break;
+            default:
+                printf("Somehow function \"solve\" returned unsupported value...\n");
+        }
+
+        printf( "If you want to continue, enter any letter except q. "
+                "Otherwise enter q to exit.\n");
+
+        ans = getchar();
+        clear_buf();
+
+        if (ans == 'q')
+        {
+            printf("Goodbye, fellow engineers!\n");
+            return 0;
+        }
+    }
     return 0;
 }
 
 enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2)
 {
     /*
+    Получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
     Примечание: похоже что math.h работает только с double, поэтому нет смысла пытаться
     считать дискриминант как long double?
     */
@@ -156,6 +169,7 @@ void get_input(double *p_a, double *p_b, double *p_c)
                     "Please, try again.\n");
             clear_buf();
         }
+        clear_buf();
 
         if ( fabs(*p_a) >= DBL_MAX or fabs(*p_b) >= DBL_MAX or fabs(*p_c) >= DBL_MAX )
         {
@@ -166,7 +180,7 @@ void get_input(double *p_a, double *p_b, double *p_c)
 
         printf( "You entered: %lg %lg %lg. Is it right?"
                 " Enter letter y if yes or anything else otherwise.\n", *p_a, *p_b, *p_c);
-        clear_buf();
+
         int c = getchar();
         clear_buf();
         if (c == 'y')
