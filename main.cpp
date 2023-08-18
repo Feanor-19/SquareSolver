@@ -83,7 +83,7 @@ int main(void)
             printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
             break;
         default:
-            printf("Somehow method \"solve\" returned unsupported value...\n");
+            printf("Somehow function \"solve\" returned unsupported value...\n");
     }
 
     return 0;
@@ -97,18 +97,27 @@ enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2)
     */
 
     //особые случаи
-//    if ( fabs(a) < DBL_EPSILON ) //a == 0
-//    {
-//        if ( fabs(b) < DBL_EPSILON ) //b == 0
-//        {
-//            if ( fabs(c) < DBL_EPSILON )//c == 0
-//            {
-//
-//            }
-//        }
-//    }
+    if ( fabs(a) < DBL_EPSILON ) //a == 0
+    {
+        if ( fabs(b) < DBL_EPSILON ) //b == 0
+        {
+            if ( fabs(c) < DBL_EPSILON )//c == 0
+            {
+                return INFINITE_SOLUTIONS;
+            }
+            else //c != 0
+            {
+                return NO_SOLUTION;
+            }
+        }
+        else //b != 0
+        {
+            *p_x1 = -c/b;
+            return LINEAL_ROOT;
+        }
+    }
 
-    //обычные случаи
+    //обычные случаи, a != 0
     double discriminant = b*b - 4.0*a*c;
 
     if ( discriminant > 0.0 )//D > 0
