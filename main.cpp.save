@@ -4,17 +4,20 @@ SQUARE SOLVER, также известная как квадратка
 Не получилось сделать поддержку long double, компилятор не знает о %Lf
 (пишу в кодблоксе от Деда)
 Вместо символа новой строки как будто получаю символ возврата каретки, это
-повлияло но clear_buf()
-
+повлияло на clear_buf()
+ПОКА ЧТО НЕТУ ПРОВЕРКИ НА ПЕРЕПОЛНЕНИЕ ВО ВРЕМЯ ВЫЧИСЛЕНИЙ
 Заметки:
-DBL_EPSILON
-DBL_MAX
 */
 
 #include <stdio.h>
 #include <ctype.h>
 #include <float.h>
 #include <math.h>
+
+int solve(double a, double b, double c, double *p_x1, double *p_x2);
+//получает коэфф и записывает корни в x1 и x2, возвращает кол-во корней,
+//то есть при возврате 1 x1=x2, при 0 в x1 и x2 неопределенное значение,
+//возврат -1 означает ошибку
 
 void get_input(double *p_a, double *p_b, double *p_c);
 //получает коэффициенты, старается добиться правильного ввода
@@ -31,18 +34,60 @@ int main(void)
     clear_buf();
 
     double a, b, c;
-    switch(ans) //на случай увеличения количества вариантов
+    if (ans == 't')
     {
-        case 't':
-            printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
-            //break; !!!ВРЕМЕННО
-        default:
-            get_input(&a, &b, &c);
+        printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
+        //*вызов функции которой пока нет*
+        //return 0; //чтобы завершить программу
+        //break; !!!ВРЕМЕННО
     }
 
-
+    get_input(&a, &b, &c);
+    
+    double x1, x2; 
+    int res = solve(a, b, c, &x1, &x2);
+    
+    switch (res)
+    {
+        case 2:
+            printf("Here are two roots: %lf %lf\n", x1, x2);
+            break;
+        case 1:
+            printf("Here are two identical roots: %lf %lf\n", x1, x2);
+        case 0:
+            print("There are no real roots... And I don't have imagination "
+            "to compute complex ones.\n");
+        case -1:
+        
+    }
 
     return 0;
+}
+
+int solve(double a, double b, double c, double *p_x1, double *p_x2)
+{
+    /*
+    Примечание: похоже что math.h работает только
+    */
+    double discriminant = b*b - 4.0*a*c;
+
+    if ( discriminant > 0.0 )//D > 0
+    {
+        *p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
+        *p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        return 2;
+    }
+    else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
+    {
+        *p_x1 = -b / (2.0*a);
+        *p_x1 = *p_x2;
+        return 1;
+    }
+    else if (discriminant < 0.0)//D < 0
+    {
+        return 0;
+    }
+    return -1;
 }
 
 void get_input(double *p_a, double *p_b, double *p_c)
@@ -50,7 +95,6 @@ void get_input(double *p_a, double *p_b, double *p_c)
     /*
     Получает три long double числа из входного потока (введённые через пробел)
     и помещает их в аргументы-указатели. Старается добиться от пользователя ввода корректных чисел.
-    НЕ ВКЛЮЧАЕТ ПРОВЕРКУ НА ТО, ВХОДЯТ ЛИ ЧИСЛА В ДОПУСТИМЫЙ ДЛЯ ТИПА ДИАПАЗОН
     */
 
     while( 1 ){ //выход из цикла через return в случае нужного ввода!!!
@@ -66,7 +110,9 @@ void get_input(double *p_a, double *p_b, double *p_c)
 
         if ( fabs(*p_a) >= DBL_MAX or fabs(*p_b) >= DBL_MAX or fabs(*p_c) >= DBL_MAX )
         {
-            printf("")
+            printf( "Sorry, number(s) is/are out of supported range. Please enter "
+                    "something with smaller absolute value.\n");
+            continue;
         }
 
         printf( "You entered: %lg %lg %lg. Is it right?"
@@ -84,6 +130,12 @@ void get_input(double *p_a, double *p_b, double *p_c)
 
 void clear_buf(void)
 {
+    /*
+    "Съедает" ввод, пока не встретит непечатаемый символ.
+    По какой-то причине при вводе данных на месте символа новой строки стоял
+    символ возврата каретки, поэтому именно проверка на непечатаемый символ, а не
+    на символ новой строки.
+    */
     while ( isprint(getchar()) ) continue;
     return;
 }
