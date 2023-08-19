@@ -1,10 +1,7 @@
 /*
 SQUARE SOLVER, также известная как квадратка
 Примечания:
-Не получилось сделать поддержку long double, компилятор не знает о %Lf
 (пишу в кодблоксе от Деда)
-Вместо символа новой строки как будто получаю символ возврата каретки, это
-повлияло на clear_buf()
 ПОКА ЧТО НЕТУ ПРОВЕРКИ НА ПЕРЕПОЛНЕНИЕ ВО ВРЕМЯ ВЫЧИСЛЕНИЙ
 Заметки:
 */
@@ -14,7 +11,7 @@ SQUARE SOLVER, также известная как квадратка
 #include <float.h>
 #include <math.h>
 
-enum SOLVE_RES
+enum SolveRes
 {
     ZERO_REAL_ROOTS = 0,
     ONE_REAL_ROOT,
@@ -25,24 +22,26 @@ enum SOLVE_RES
     ERROR,
 };
 
-enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2);
 //получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
+SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2);
 
-void get_input(double *p_a, double *p_b, double *p_c);
 //получает коэффициенты, старается добиться правильного ввода
+void get_input(double *p_a, double *p_b, double *p_c);
 
-void clear_buf(void);
+//получает один символ, после этого "съедает" всё до конца строчки
+int get_char();
+
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввоода
+void clear_buf(void);
 
 int main(void)
 {
-    printf("Hello fellow engineers! Enter any letter except t to begin.");
-    printf("If you want to run tests, please enter letter t.\n");
+    printf( "Hello fellow engineers! Enter any letter except t to begin."
+            "If you want to run tests, please enter letter t.\n");
 
-    int ans = getchar();
-    clear_buf();
+    int ans = get_char();
 
-    double a, b, c;
+    double a = 0, b = 0, c = 0;
     if (ans == 't')
     {
         printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
@@ -55,8 +54,8 @@ int main(void)
     {
         get_input(&a, &b, &c);
 
-        double x1, x2;
-        enum SOLVE_RES res = solve(a, b, c, &x1, &x2);
+        double x1 = 0, x2 = 0;
+        SolveRes res = solve(a, b, c, &x1, &x2);
 
         switch (res)
         {
@@ -89,8 +88,7 @@ int main(void)
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
 
-        ans = getchar();
-        clear_buf();
+        ans = get_char();
 
         if (ans == 'q')
         {
@@ -101,7 +99,7 @@ int main(void)
     return 0;
 }
 
-enum SOLVE_RES solve(double a, double b, double c, double *p_x1, double *p_x2)
+SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
 {
     /*
     Получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
@@ -171,24 +169,37 @@ void get_input(double *p_a, double *p_b, double *p_c)
         }
         clear_buf();
 
-        if ( fabs(*p_a) >= DBL_MAX or fabs(*p_b) >= DBL_MAX or fabs(*p_c) >= DBL_MAX )
+        if ( fabs(*p_a) >= DBL_MAX || fabs(*p_b) >= DBL_MAX || fabs(*p_c) >= DBL_MAX )
         {
             printf( "Sorry, number(s) is/are out of supported range. Please enter "
                     "something with smaller absolute value.\n");
             continue;
         }
 
-        printf( "You entered: %lg %lg %lg. Is it right?"
-                " Enter letter y if yes or anything else otherwise.\n", *p_a, *p_b, *p_c);
+        printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", *p_a, *p_b, *p_c);
 
-        int c = getchar();
-        clear_buf();
+        int c = get_char();
+
         if (c == 'y')
         {
             printf("Great!\n");
             return;
         }
     }
+}
+
+int get_char()
+{
+    int c = getchar();
+
+    if (c == EOF)
+    {
+        printf("EOF FOUND! SHUTTING DOWN!\n");
+    }
+
+    clear_buf();
+
+    return c;
 }
 
 void clear_buf(void)
