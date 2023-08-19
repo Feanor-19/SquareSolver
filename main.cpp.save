@@ -28,10 +28,14 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2);
 //получает коэффициенты, старается добиться правильного ввода
 void get_input(double *p_a, double *p_b, double *p_c);
 
+//складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
+//пишет в res НЕ 0, если не было переполнения - пишет в res 0
+double add_dbl(double a, double b, int *res);
+
 //получает один символ, после этого "съедает" всё до конца строчки
 int get_char();
 
-//старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввоода
+//старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
 
 int main(void)
@@ -39,8 +43,7 @@ int main(void)
     printf( "Hello fellow engineers! Enter any letter except t to begin."
             "If you want to run tests, please enter letter t.\n");
 
-    int ans = getchar();
-    clear_buf();
+    int ans = get_char();
 
     double a = 0, b = 0, c = 0;
     if (ans == 't')
@@ -55,7 +58,7 @@ int main(void)
     {
         get_input(&a, &b, &c);
 
-        double x1, x2;
+        double x1 = 0, x2 = 0;
         SolveRes res = solve(a, b, c, &x1, &x2);
 
         switch (res)
@@ -89,8 +92,7 @@ int main(void)
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
 
-        ans = getchar();
-        clear_buf();
+        ans = get_char();
 
         if (ans == 'q')
         {
@@ -180,8 +182,8 @@ void get_input(double *p_a, double *p_b, double *p_c)
 
         printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", *p_a, *p_b, *p_c);
 
-        int c = getchar();
-        clear_buf();
+        int c = get_char();
+
         if (c == 'y')
         {
             printf("Great!\n");
@@ -190,19 +192,38 @@ void get_input(double *p_a, double *p_b, double *p_c)
     }
 }
 
+double add_dbl(double a, double b, int *res)
+{    
+    if ( a > 0 && b > 0 || a < 0 && b < 0 )
+    {
+        if (fabs(a) >= DBL_MAX - fabs(b))
+        {
+            
+        }
+    }
+    
+    return a + b;
+}
+
 int get_char()
 {
-    
+    int c = getchar();
+
+    if (c == EOF)
+    {
+        printf("EOF FOUND! SHUTTING DOWN!\n");
+    }
+
+    clear_buf();
+
+    return c;
 }
 
 void clear_buf(void)
 {
     /*
     "Съедает" ввод, пока не встретит непечатаемый символ.
-    По какой-то причине при вводе данных на месте символа новой строки стоял
-    символ возврата каретки, поэтому именно проверка на непечатаемый символ, а не
-    на символ новой строки.
     */
-    while ( isprint(getchar()) ) continue;
+    while ( getchar() != '\n' ) continue;
     return;
 }
