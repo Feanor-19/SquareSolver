@@ -29,8 +29,16 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2);
 void get_input(double *p_a, double *p_b, double *p_c);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
-//пишет в res НЕ 0, если не было переполнения - пишет в res 0
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
 double add_dbl(double a, double b, int *res);
+
+//умножает a и b, результат умножения возвращает, а если по пути произошло переполнение,
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
+double mul_dbl(double a, double b, int* res);
+
+//делит a на b, результат деления возвращает, а если по пути произошло переполнение,
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
+double div_dbl(double a, double b, int* res);
 
 //получает один символ, после этого "съедает" всё до конца строчки
 int get_char();
@@ -200,7 +208,6 @@ double add_dbl(double a, double b, int *res)
     оба слагаемых одного знака
     2) не собрано в один if для читаемости и логики
     */
-    *res = 0;
     if ( (a > 0 && b > 0) || (a < 0 && b < 0) )
     {
         if (fabs(a) > DBL_MAX - fabs(b))
@@ -210,6 +217,44 @@ double add_dbl(double a, double b, int *res)
     }
 
     return a + b;
+}
+
+double mul_dbl(double a, double b, int* res)
+{
+    /*
+    Примечание:
+    1) только если оба множителя больше 1, может произойти переполнение
+    2) не собрано в один if для читаемости и логики
+    */
+
+    if (a > 1 && b > 1)
+    {
+        if ( fabs(a) > DBL_MAX / fabs(b) )
+        {
+            *res = 1;
+        }
+    }
+
+    return a * b;
+}
+
+double div_dbl(double a, double b, int* res)
+{
+    /*
+    Примечание:
+    1) только если делим на число < 1, может произойти переполнение
+    2) не собрано в один if для читаемости и логики
+    */
+
+    if (b < 1)
+    {
+        if ( fabs(a) > DBL_MAX * fabs(b) )
+        {
+            *res = 1;
+        }
+    }
+
+    return a / b;
 }
 
 int get_char()

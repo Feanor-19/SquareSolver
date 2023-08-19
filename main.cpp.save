@@ -32,6 +32,13 @@ void get_input(double *p_a, double *p_b, double *p_c);
 //пишет в res НЕ 0, если не было переполнения - пишет в res 0
 double add_dbl(double a, double b, int *res);
 
+//умножает a и b, результат умножения возвращает, а если по пути произошло переполнение,
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
+double mul_dbl(double a, double b, int* res);
+
+
+
+
 //получает один символ, после этого "съедает" всё до конца строчки
 int get_char();
 
@@ -193,16 +200,41 @@ void get_input(double *p_a, double *p_b, double *p_c)
 }
 
 double add_dbl(double a, double b, int *res)
-{    
-    if ( a > 0 && b > 0 || a < 0 && b < 0 )
+{
+    /*
+    Примечание:
+    1) переполнение может быть только если
+    оба слагаемых одного знака
+    2) не собрано в один if для читаемости и логики
+    */
+    if ( (a > 0 && b > 0) || (a < 0 && b < 0) )
     {
-        if (fabs(a) >= DBL_MAX - fabs(b))
+        if (fabs(a) > DBL_MAX - fabs(b))
         {
-            
+            *res = 1;
         }
     }
-    
+
     return a + b;
+}
+
+double mul_dbl(double a, double b, int* res)
+{
+    /*
+    Примечание:
+    1) только если оба множителя больше 1, может произойти переполнение
+    2) не собрано в один if для читаемости и логики
+    */
+
+    if (a > 1 && b > 1)
+    {
+        if ( fabs(a) > DBL_MAX / fabs(b) )
+        {
+            *res = 1;
+        }
+    }
+
+    return a * b;
 }
 
 int get_char()
