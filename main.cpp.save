@@ -29,15 +29,16 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2);
 void get_input(double *p_a, double *p_b, double *p_c);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
-//пишет в res НЕ 0, если не было переполнения - пишет в res 0
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
 double add_dbl(double a, double b, int *res);
 
 //умножает a и b, результат умножения возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
 double mul_dbl(double a, double b, int* res);
 
-
-
+//делит a на b, результат деления возвращает, а если по пути произошло переполнение,
+//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
+double div_dbl(double a, double b, int* res);
 
 //получает один символ, после этого "съедает" всё до конца строчки
 int get_char();
@@ -140,17 +141,32 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     }
 
     //обычные случаи, a != 0
-    double discriminant = b*b - 4.0*a*c;
+    int ovrfl = 0; //остлеживание переполнения при вычислениях
+
+    //double discriminant = b*b - 4.0*a*c;
+    double discriminant = mul_dbl(mul_dbl(b, b, &ovrfl), mul_dbl(4.0, mul_dbl(a, c, &ovrfl), &ovrfl), &ovrfl);
+
+    if (ovrfl)
+    {
+        printf("Overflow during computing discriminant!\n");
+        return ERROR;
+    }
 
     if ( discriminant > 0.0 )//D > 0
     {
-        *p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        *p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
+        *p_x1 = div_dbl( add_dbl( -b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+
+        //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        *p_x2 = div_dbl( add_dbl( -b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+
         return TWO_REAL_ROOTS;
     }
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
-        *p_x1 = -b / (2.0*a);
+        //*p_x1 = -b / (2.0*a);
+        *p_x1 = div_dbl( -b,  )
+        
         *p_x2 = *p_x1;
         return ONE_REAL_ROOT;
     }
@@ -158,6 +174,13 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     {
         return ZERO_REAL_ROOTS;
     }
+
+    if (ovrfl)
+    {
+        printf("Overflow during computing roots!\n");
+        return ERROR;
+    }
+
     return ERROR;
 }
 
@@ -235,6 +258,25 @@ double mul_dbl(double a, double b, int* res)
     }
 
     return a * b;
+}
+
+double div_dbl(double a, double b, int* res)
+{
+    /*
+    Примечание:
+    1) только если делим на число < 1, может произойти переполнение
+    2) не собрано в один if для читаемости и логики
+    */
+
+    if (b < 1)
+    {
+        if ( fabs(a) > DBL_MAX * fabs(b) )
+        {
+            *res = 1;
+        }
+    }
+
+    return a / b;
 }
 
 int get_char()

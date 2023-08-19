@@ -135,30 +135,60 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
         }
         else //b != 0
         {
-            *p_x1 = -c/b;
+            //*p_x1 = -c/b;
+            *p_x1 = div_dbl(-c, b, &ovrfl);
+
             return LINEAL_ROOT;
         }
     }
 
     //обычные случаи, a != 0
-    double discriminant = b*b - 4.0*a*c;
+    int ovrfl = 0; //остлеживание переполнения при вычислениях
+
+    //double discriminant = b*b - 4.0*a*c;
+    double discriminant = mul_dbl(mul_dbl(b, b, &ovrfl), mul_dbl(4.0, mul_dbl(a, c, &ovrfl), &ovrfl), &ovrfl);
+
+    if (ovrfl)
+    {
+        printf("Overflow during computing discriminant!\n");
+        return ERROR;
+    }
 
     if ( discriminant > 0.0 )//D > 0
     {
-        *p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        *p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
+        *p_x1 = div_dbl( add_dbl( -b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+
+        //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        *p_x2 = div_dbl( add_dbl( -b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+
+        if (ovrfl)
+        {
+            printf("Overflow during computing roots!\n");
+            return ERROR;
+        }
+
         return TWO_REAL_ROOTS;
     }
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
-        *p_x1 = -b / (2.0*a);
+        //*p_x1 = -b / (2.0*a);
+        *p_x1 = div_dbl( -b, mul_dbl(2.0, a, &ovrfl), &ovrfl );
         *p_x2 = *p_x1;
+
+        if (ovrfl)
+        {
+            printf("Overflow during computing roots!\n");
+            return ERROR;
+        }
+
         return ONE_REAL_ROOT;
     }
     else if (discriminant < 0.0)//D < 0
     {
         return ZERO_REAL_ROOTS;
     }
+
     return ERROR;
 }
 
