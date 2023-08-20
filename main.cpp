@@ -22,11 +22,25 @@ enum SolveRes
     ERROR,
 };
 
+struct Coeffs
+{
+    double a;
+    double b;
+    double c;
+};
+
+struct Solution
+{
+    SolveRes res;
+    double x1;
+    double x2;
+};
+
 //получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
-SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2);
+SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2);
 
 //получает коэффициенты, старается добиться правильного ввода
-void get_input(double *p_a, double *p_b, double *p_c);
+Coeffs get_input(void);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
@@ -53,7 +67,8 @@ int main(void)
 
     int ans = get_char();
 
-    double a = 0, b = 0, c = 0;
+    //double a = 0, b = 0, c = 0;
+
     if (ans == 't')
     {
         printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
@@ -64,10 +79,11 @@ int main(void)
 
     while (1)//выход через return
     {
-        get_input(&a, &b, &c);
+        Coeffs coeffs = get_input();
+        //printf("!!!%lg %lg %lg\n", coeffs.a, coeffs.b, coeffs.c);
 
         double x1 = 0, x2 = 0;
-        SolveRes res = solve(a, b, c, &x1, &x2);
+        SolveRes res = solve(coeffs, &x1, &x2);
 
         switch (res)
         {
@@ -111,7 +127,7 @@ int main(void)
     return 0;
 }
 
-SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
+SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2)
 {
     /*
     Получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
@@ -119,12 +135,14 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     считать дискриминант как long double?
     */
 
+    int ovrfl = 0; //остлеживание переполнения при вычислениях
+
     //особые случаи
-    if ( fabs(a) < DBL_EPSILON ) //a == 0
+    if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
     {
-        if ( fabs(b) < DBL_EPSILON ) //b == 0
+        if ( fabs(coeffs.b) < DBL_EPSILON ) //b == 0
         {
-            if ( fabs(c) < DBL_EPSILON )//c == 0
+            if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
             {
                 return INFINITE_SOLUTIONS;
             }
@@ -136,17 +154,22 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
         else //b != 0
         {
             //*p_x1 = -c/b;
-            *p_x1 = div_dbl(-c, b, &ovrfl);
+            *p_x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
+
+            if (ovrfl)
+            {
+                printf("Overflow during computing the lineal root!\n");
+                return ERROR;
+            }
 
             return LINEAL_ROOT;
         }
     }
 
     //обычные случаи, a != 0
-    int ovrfl = 0; //остлеживание переполнения при вычислениях
 
     //double discriminant = b*b - 4.0*a*c;
-    double discriminant = mul_dbl(mul_dbl(b, b, &ovrfl), mul_dbl(4.0, mul_dbl(a, c, &ovrfl), &ovrfl), &ovrfl);
+    double discriminant = add_dbl(mul_dbl(coeffs.b, coeffs.b, &ovrfl), -mul_dbl(4.0, mul_dbl(coeffs.a, coeffs.c, &ovrfl), &ovrfl), &ovrfl);
 
     if (ovrfl)
     {
@@ -157,10 +180,10 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     if ( discriminant > 0.0 )//D > 0
     {
         //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        *p_x1 = div_dbl( add_dbl( -b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+        *p_x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
-        *p_x2 = div_dbl( add_dbl( -b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, a, &ovrfl), &ovrfl );
+        *p_x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         if (ovrfl)
         {
@@ -173,7 +196,7 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
         //*p_x1 = -b / (2.0*a);
-        *p_x1 = div_dbl( -b, mul_dbl(2.0, a, &ovrfl), &ovrfl );
+        *p_x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
         *p_x2 = *p_x1;
 
         if (ovrfl)
@@ -192,18 +215,19 @@ SolveRes solve(double a, double b, double c, double *p_x1, double *p_x2)
     return ERROR;
 }
 
-void get_input(double *p_a, double *p_b, double *p_c)
+Coeffs get_input(void)
 {
     /*
     Получает три long double числа из входного потока (введённые через пробел)
     и помещает их в аргументы-указатели. Старается добиться от пользователя ввода корректных чисел.
     */
+    double a = 0, b = 0, c = 0;
 
     while( 1 ){ //выход из цикла через return в случае нужного ввода!!!
         printf( "Enter real coefficients a, b, c in order "
                 "to get ax^2 + bx + c = 0 solved, for example: \"1.45 5.19 12\".\n");
 
-        while (scanf("%lf %lf %lf", p_a, p_b, p_c) != 3)
+        while (scanf("%lf %lf %lf", &a, &b, &c) != 3)
         {
             printf( "Sorry, I don't see here three real numbers separated by a space. "
                     "Please, try again.\n");
@@ -211,21 +235,21 @@ void get_input(double *p_a, double *p_b, double *p_c)
         }
         clear_buf();
 
-        if ( fabs(*p_a) >= DBL_MAX || fabs(*p_b) >= DBL_MAX || fabs(*p_c) >= DBL_MAX )
+        if ( fabs(a) >= DBL_MAX || fabs(b) >= DBL_MAX || fabs(c) >= DBL_MAX )
         {
             printf( "Sorry, number(s) is/are out of supported range. Please enter "
                     "something with smaller absolute value.\n");
             continue;
         }
 
-        printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", *p_a, *p_b, *p_c);
+        printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", a, b, c);
 
-        int c = get_char();
+        int ans = get_char();
 
-        if (c == 'y')
+        if (ans == 'y')
         {
             printf("Great!\n");
-            return;
+            return {a, b, c};
         }
     }
 }
