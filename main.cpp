@@ -37,7 +37,7 @@ struct Solution
 };
 
 //получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
-SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2);
+Solution solve(Coeffs coeffs);
 
 //получает коэффициенты, старается добиться правильного ввода
 Coeffs get_input(void);
@@ -82,16 +82,15 @@ int main(void)
         Coeffs coeffs = get_input();
         //printf("!!!%lg %lg %lg\n", coeffs.a, coeffs.b, coeffs.c);
 
-        double x1 = 0, x2 = 0;
-        SolveRes res = solve(coeffs, &x1, &x2);
+        Solution solution = solve(coeffs);
 
-        switch (res)
+        switch (solution.res)
         {
             case TWO_REAL_ROOTS:
-                printf("Here are two roots: %lg %lg\n", x1, x2);
+                printf("Here are two roots: %lg %lg\n", solution.x1, solution.x2);
                 break;
             case ONE_REAL_ROOT:
-                printf("Here are two identical roots: %lg %lg\n", x1, x2);
+                printf("Here are two identical roots: %lg %lg\n", solution.x1, solution.x2);
                 break;
             case ZERO_REAL_ROOTS:
                 printf("There are no real roots... And I don't have imagination "
@@ -104,7 +103,7 @@ int main(void)
                 printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
                 break;
             case LINEAL_ROOT:
-                printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", x1);
+                printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", solution.x1);
                 break;
             case INFINITE_SOLUTIONS:
                 printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
@@ -127,7 +126,7 @@ int main(void)
     return 0;
 }
 
-SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2)
+Solution solve(Coeffs coeffs)
 {
     /*
     Получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
@@ -144,25 +143,25 @@ SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2)
         {
             if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
             {
-                return INFINITE_SOLUTIONS;
+                return {INFINITE_SOLUTIONS, 0, 0};
             }
             else //c != 0
             {
-                return NO_SOLUTION;
+                return {NO_SOLUTION, 0, 0};
             }
         }
         else //b != 0
         {
             //*p_x1 = -c/b;
-            *p_x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
+            double x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
 
             if (ovrfl)
             {
                 printf("Overflow during computing the lineal root!\n");
-                return ERROR;
+                return {ERROR, 0, 0};
             }
 
-            return LINEAL_ROOT;
+            return {LINEAL_ROOT, x1, x1};
         }
     }
 
@@ -174,45 +173,45 @@ SolveRes solve(Coeffs coeffs, double *p_x1, double *p_x2)
     if (ovrfl)
     {
         printf("Overflow during computing discriminant!\n");
-        return ERROR;
+        return {ERROR, 0, 0};
     }
 
     if ( discriminant > 0.0 )//D > 0
     {
         //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        *p_x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
-        *p_x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         if (ovrfl)
         {
             printf("Overflow during computing roots!\n");
-            return ERROR;
+            return {ERROR, 0, 0};
         }
 
-        return TWO_REAL_ROOTS;
+        return {TWO_REAL_ROOTS, x1, x2};
     }
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
         //*p_x1 = -b / (2.0*a);
-        *p_x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
-        *p_x2 = *p_x1;
+        double x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x2 = x1;
 
         if (ovrfl)
         {
             printf("Overflow during computing roots!\n");
-            return ERROR;
+            return {ERROR, 0, 0};
         }
 
-        return ONE_REAL_ROOT;
+        return {ONE_REAL_ROOT, x1, x2};
     }
     else if (discriminant < 0.0)//D < 0
     {
-        return ZERO_REAL_ROOTS;
+        return {ZERO_REAL_ROOTS, 0, 0};
     }
 
-    return ERROR;
+    return {ERROR, 0, 0};
 }
 
 Coeffs get_input(void)
@@ -249,6 +248,12 @@ Coeffs get_input(void)
         if (ans == 'y')
         {
             printf("Great!\n");
+
+            //В Прате написано, что нужно писать (C99)
+            //(struct Coeffs) {a, b, c}
+            //однако если с++ разрешает вообще не писать ключевое слово struct
+            //то наверно и в таком вот литерале можно круглые скобки с их
+            //содержимым не писать?
             return {a, b, c};
         }
     }
