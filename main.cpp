@@ -6,6 +6,7 @@ SQUARE SOLVER, также известная как квадратка
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <float.h>
 #include <math.h>
@@ -36,10 +37,10 @@ struct Solution
     double x2;
 };
 
-//получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
+//получает коэфф и возвращает результат решения с корнями
 Solution solve(Coeffs coeffs);
 
-//получает коэффициенты, старается добиться правильного ввода
+//возвращает коэффициенты, старается добиться правильного ввода
 Coeffs get_input(void);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
@@ -128,10 +129,12 @@ int main(void)
 Solution solve(Coeffs coeffs)
 {
     /*
-    Получает коэфф и записывает корни в x1 и x2, возвращает enum SOLVE_RES
-    Примечание: похоже что math.h работает только с double, поэтому нет смысла пытаться
-    считать дискриминант как long double?
+    получает структуру с коэфф и возвращает структурой результат решения с корнями
     */
+
+    //isnormal проверяет что лежит обычное число, а не inf, nan и подобные
+    //а ноль за нормальное не считает...
+    assert((coeffs.a == 0 or isnormal(coeffs.a)) && (coeffs.b == 0 or isnormal(coeffs.b)) && (coeffs.c == 0 or isnormal(coeffs.c)));
 
     int ovrfl = 0; //остлеживание переполнения при вычислениях
 
@@ -221,7 +224,7 @@ Coeffs get_input(void)
 {
     /*
     Получает три long double числа из входного потока (введённые через пробел)
-    и помещает их в аргументы-указатели. Старается добиться от пользователя ввода корректных чисел.
+    и возвращает в виде структуры. Старается добиться от пользователя ввода корректных чисел.
     */
     double a = 0, b = 0, c = 0;
 
@@ -252,11 +255,10 @@ Coeffs get_input(void)
         {
             printf("Great!\n");
 
-            //В Прате написано, что нужно писать (C99)
-            //(struct Coeffs) {a, b, c}
-            //однако если с++ разрешает вообще не писать ключевое слово struct
-            //то наверно и в таком вот литерале можно круглые скобки с их
-            //содержимым не писать?
+            //isnormal проверяет что лежит обычное число, а не inf, nan и подобные
+            //а ноль за нормальное не считает...
+            assert((a == 0 or isnormal(a)) && (b == 0 or isnormal(b)) && (c == 0 or isnormal(c)));
+
             return {a, b, c};
         }
     }
@@ -270,6 +272,9 @@ double add_dbl(double a, double b, int *res)
     оба слагаемых одного знака
     2) не собрано в один if для читаемости и логики
     */
+
+    assert(res!=NULL);
+
     if ( (a > 0 && b > 0) || (a < 0 && b < 0) )
     {
         if (fabs(a) > DBL_MAX - fabs(b))
@@ -288,6 +293,8 @@ double mul_dbl(double a, double b, int* res)
     1) только если оба множителя больше 1, может произойти переполнение
     2) не собрано в один if для читаемости и логики
     */
+
+    assert(res!=NULL);
 
     if (a > 1 && b > 1)
     {
@@ -308,6 +315,8 @@ double div_dbl(double a, double b, int* res)
     2) не собрано в один if для читаемости и логики
     */
 
+    assert(res!=NULL);
+
     if (b < 1)
     {
         if ( fabs(a) > DBL_MAX * fabs(b) )
@@ -326,6 +335,7 @@ int get_one_char_ans()
     if (c == EOF)
     {
         printf("EOF FOUND! SHUTTING DOWN!\n");
+        abort();
     }
 
     clear_buf();
