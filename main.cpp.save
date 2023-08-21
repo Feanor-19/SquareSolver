@@ -2,7 +2,6 @@
 SQUARE SOLVER, также известная как квадратка
 Примечания:
 (пишу в кодблоксе от Деда)
-ПОКА ЧТО НЕТУ ПРОВЕРКИ НА ПЕРЕПОЛНЕНИЕ ВО ВРЕМЯ ВЫЧИСЛЕНИЙ
 Заметки:
 */
 
@@ -10,6 +9,7 @@ SQUARE SOLVER, также известная как квадратка
 #include <ctype.h>
 #include <float.h>
 #include <math.h>
+#include <assert.h>
 
 enum SolveRes
 {
@@ -20,6 +20,7 @@ enum SolveRes
     LINEAL_ROOT,
     INFINITE_SOLUTIONS,
     ERROR,
+    UNDEFINED_ERROR,
 };
 
 struct Coeffs
@@ -55,7 +56,7 @@ double mul_dbl(double a, double b, int* res);
 double div_dbl(double a, double b, int* res);
 
 //получает один символ, после этого "съедает" всё до конца строчки
-int get_char();
+int get_one_char_ans();
 
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
@@ -65,7 +66,7 @@ int main(void)
     printf( "Hello fellow engineers! Enter any letter except t to begin."
             "If you want to run tests, please enter letter t.\n");
 
-    int ans = get_char();
+    int ans = get_one_char_ans();
 
     //double a = 0, b = 0, c = 0;
 
@@ -82,7 +83,6 @@ int main(void)
         Coeffs coeffs = get_input();
         //printf("!!!%lg %lg %lg\n", coeffs.a, coeffs.b, coeffs.c);
 
-        double x1 = 0, x2 = 0;
         Solution solution = solve(coeffs);
 
         switch (solution.res)
@@ -116,7 +116,7 @@ int main(void)
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
 
-        ans = get_char();
+        ans = get_one_char_ans();
 
         if (ans == 'q')
         {
@@ -144,11 +144,11 @@ Solution solve(Coeffs coeffs)
         {
             if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
             {
-                return INFINITE_SOLUTIONS;
+                return {INFINITE_SOLUTIONS, 0, 0};
             }
             else //c != 0
             {
-                return NO_SOLUTION;
+                return {NO_SOLUTION, 0, 0};
             }
         }
         else //b != 0
@@ -159,10 +159,10 @@ Solution solve(Coeffs coeffs)
             if (ovrfl)
             {
                 printf("Overflow during computing the lineal root!\n");
-                return ERROR;
+                return {ERROR, 0, 0};
             }
 
-            return {LI};
+            return {LINEAL_ROOT, x1, x1};
         }
     }
 
@@ -174,45 +174,49 @@ Solution solve(Coeffs coeffs)
     if (ovrfl)
     {
         printf("Overflow during computing discriminant!\n");
-        return ERROR;
+        return {ERROR, 0, 0};
     }
 
     if ( discriminant > 0.0 )//D > 0
     {
         //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        *p_x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
-        *p_x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         if (ovrfl)
         {
             printf("Overflow during computing roots!\n");
-            return ERROR;
+            return {ERROR, 0, 0};
         }
 
-        return TWO_REAL_ROOTS;
+        return {TWO_REAL_ROOTS, x1, x2};
     }
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
         //*p_x1 = -b / (2.0*a);
-        *p_x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
-        *p_x2 = *p_x1;
+        double x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x2 = x1;
 
         if (ovrfl)
         {
             printf("Overflow during computing roots!\n");
-            return ERROR;
+            return {ERROR, 0, 0};
         }
 
-        return ONE_REAL_ROOT;
+        return {ONE_REAL_ROOT, x1, x2};
     }
     else if (discriminant < 0.0)//D < 0
     {
-        return ZERO_REAL_ROOTS;
+        return {ZERO_REAL_ROOTS, 0, 0};
     }
 
-    return ERROR;
+    //если все случаи учтены, программа не должна добраться до этой строчки
+    assert(0);
+
+    //по-хорошему строчка ниже никогда не должна выполняться, но иначе варнинг
+    return {ERROR, 0, 0}; 
 }
 
 Coeffs get_input(void)
@@ -244,11 +248,17 @@ Coeffs get_input(void)
 
         printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", a, b, c);
 
-        int ans = get_char();
+        int ans = get_one_char_ans();
 
         if (ans == 'y')
         {
             printf("Great!\n");
+
+            //В Прате написано, что нужно писать (C99)
+            //(struct Coeffs) {a, b, c}
+            //однако если с++ разрешает вообще не писать ключевое слово struct
+            //то наверно и в таком вот литерале можно круглые скобки с их
+            //содержимым не писать?
             return {a, b, c};
         }
     }
@@ -311,7 +321,7 @@ double div_dbl(double a, double b, int* res)
     return a / b;
 }
 
-int get_char()
+int get_one_char_ans()
 {
     int c = getchar();
 

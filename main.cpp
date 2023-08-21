@@ -2,7 +2,6 @@
 SQUARE SOLVER, также известная как квадратка
 Примечания:
 (пишу в кодблоксе от Деда)
-ПОКА ЧТО НЕТУ ПРОВЕРКИ НА ПЕРЕПОЛНЕНИЕ ВО ВРЕМЯ ВЫЧИСЛЕНИЙ
 Заметки:
 */
 
@@ -10,6 +9,7 @@ SQUARE SOLVER, также известная как квадратка
 #include <ctype.h>
 #include <float.h>
 #include <math.h>
+#include <assert.h>
 
 enum SolveRes
 {
@@ -55,7 +55,7 @@ double mul_dbl(double a, double b, int* res);
 double div_dbl(double a, double b, int* res);
 
 //получает один символ, после этого "съедает" всё до конца строчки
-int get_char();
+int get_one_char_ans();
 
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
@@ -65,7 +65,7 @@ int main(void)
     printf( "Hello fellow engineers! Enter any letter except t to begin."
             "If you want to run tests, please enter letter t.\n");
 
-    int ans = get_char();
+    int ans = get_one_char_ans();
 
     //double a = 0, b = 0, c = 0;
 
@@ -80,7 +80,6 @@ int main(void)
     while (1)//выход через return
     {
         Coeffs coeffs = get_input();
-        //printf("!!!%lg %lg %lg\n", coeffs.a, coeffs.b, coeffs.c);
 
         Solution solution = solve(coeffs);
 
@@ -115,7 +114,7 @@ int main(void)
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
 
-        ans = get_char();
+        ans = get_one_char_ans();
 
         if (ans == 'q')
         {
@@ -211,6 +210,10 @@ Solution solve(Coeffs coeffs)
         return {ZERO_REAL_ROOTS, 0, 0};
     }
 
+    //если все случаи учтены, программа не должна добраться до этой строчки
+    assert(0);
+
+    //по-хорошему строчка ниже никогда не должна выполняться, но иначе варнинг
     return {ERROR, 0, 0};
 }
 
@@ -243,7 +246,7 @@ Coeffs get_input(void)
 
         printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", a, b, c);
 
-        int ans = get_char();
+        int ans = get_one_char_ans();
 
         if (ans == 'y')
         {
@@ -316,7 +319,7 @@ double div_dbl(double a, double b, int* res)
     return a / b;
 }
 
-int get_char()
+int get_one_char_ans()
 {
     int c = getchar();
 
