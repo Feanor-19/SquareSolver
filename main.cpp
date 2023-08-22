@@ -3,6 +3,13 @@ SQUARE SOLVER, также известная как квадратка
 Примечания:
 (пишу в кодблоксе от Деда)
 Заметки:
+
+парсинг командной строки, глобальная переменная
+switch sol res в отдельную ф-ю
+вместо q y/n
+assert разобрать если длинные
+к некоторым assert добавить описание
+убрать страшную вложенность с помощью goto
 */
 
 #include <stdio.h>
@@ -60,6 +67,8 @@ SolutionSquare solve_square(const CoeffsSquare coeffs);
 //получает коэфф линейного уравнения и возвращает результат решения с корнями
 SolutionLinear solve_linear(const CoeffsLinear coeffs);
 
+void print_square_solution(SolutionSquare solution);
+
 //читает тесты из файла, сообщает о результатах прохождения каждого теста
 void run_tests(void);
 
@@ -107,33 +116,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
 
         SolutionSquare solution = solve_square(coeffs);
 
-        switch (solution.res)
-        {
-            case TWO_REAL_ROOTS:
-                printf("Here are two roots: %lg %lg\n", solution.x1, solution.x2);
-                break;
-            case ONE_REAL_ROOT:
-                printf("Here are two identical roots: %lg %lg\n", solution.x1, solution.x2);
-                break;
-            case ZERO_REAL_ROOTS:
-                printf("There are no real roots... And I don't have imagination "
-                "to compute complex ones.\n");
-                break;
-            case ERROR:
-                printf("Well, some error occurred during solving the equation.\n");
-                break;
-            case NO_SOLUTION:
-                printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
-                break;
-            case LINEAL_ROOT:
-                printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", solution.x1);
-                break;
-            case INFINITE_SOLUTIONS:
-                printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
-                break;
-            default:
-                printf("Somehow function \"solve\" returned unsupported value...\n");
-        }
+        print_square_solution(solution);
 
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
@@ -243,6 +226,37 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs)
         }
 
         return {LINEAL_ROOT, x1};
+    }
+}
+
+void print_square_solution(SolutionSquare solution)
+{
+    switch (solution.res)
+    {
+        case TWO_REAL_ROOTS:
+            printf("Here are two roots: %lg %lg\n", solution.x1, solution.x2);
+            break;
+        case ONE_REAL_ROOT:
+            printf("Here are two identical roots: %lg %lg\n", solution.x1, solution.x2);
+            break;
+        case ZERO_REAL_ROOTS:
+            printf("There are no real roots... And I don't have imagination "
+            "to compute complex ones.\n");
+            break;
+        case ERROR:
+            printf("Well, some error occurred during solving the equation.\n");
+            break;
+        case NO_SOLUTION:
+            printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
+            break;
+        case LINEAL_ROOT:
+            printf("It is not ax^2+bx+c=0, it is bx+c=0. x = -c/b. x = %lg.\n", solution.x1);
+            break;
+        case INFINITE_SOLUTIONS:
+            printf("Well, any real number is a solution. But a = b = c = 0 is too trivial, you know.\n");
+            break;
+        default:
+            printf("Somehow function \"solve\" returned unsupported value...\n");
     }
 }
 
