@@ -38,28 +38,28 @@ struct Solution
 };
 
 //получает коэфф и возвращает результат решения с корнями
-Solution solve(Coeffs coeffs);
+Solution solve(const Coeffs coeffs);
 
 //возвращает коэффициенты, старается добиться правильного ввода
 Coeffs get_input(void);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double add_dbl(double a, double b, int *res);
+double add_dbl(const double a, const double b, int * const res);
 
 //умножает a и b, результат умножения возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double mul_dbl(double a, double b, int* res);
+double mul_dbl(const double a, const double b, int * const res);
 
 //делит a на b, результат деления возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double div_dbl(double a, double b, int* res);
+double div_dbl(const double a, const double b, int * const res);
 
 //проверка, является x нулём
-int is_dbl_zero(double x);
+int is_dbl_zero(const double x);
 
 //получает один символ, после этого "съедает" всё до конца строчки
-int get_one_char_ans();
+int get_one_char_ans(void);
 
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
@@ -128,7 +128,7 @@ int main(void)
     return 0;
 }
 
-Solution solve(Coeffs coeffs)
+Solution solve(const Coeffs coeffs)
 {
     /*
     получает структуру с коэфф и возвращает структурой результат решения с корнями
@@ -264,7 +264,7 @@ Coeffs get_input(void)
     }
 }
 
-double add_dbl(double a, double b, int *res)
+double add_dbl(const double a, const double b, int * const res)
 {
     /*
     Примечание:
@@ -286,7 +286,7 @@ double add_dbl(double a, double b, int *res)
     return a + b;
 }
 
-double mul_dbl(double a, double b, int* res)
+double mul_dbl(const double a, const double b, int * const res)
 {
     /*
     Примечание:
@@ -307,7 +307,7 @@ double mul_dbl(double a, double b, int* res)
     return a * b;
 }
 
-double div_dbl(double a, double b, int* res)
+double div_dbl(const double a, const double b, int * const res)
 {
     /*
     Примечание:
@@ -328,12 +328,12 @@ double div_dbl(double a, double b, int* res)
     return a / b;
 }
 
-int is_dbl_zero(double x)
+int is_dbl_zero(const double x)
 {
     return fabs(x) < DBL_EPSILON;
 }
 
-int get_one_char_ans()
+int get_one_char_ans(void)
 {
     int c = getchar();
 
