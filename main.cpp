@@ -88,7 +88,13 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
             "Hello fellow engineers! Enter any letter except t to begin."
             " If you want to run tests, please enter letter t.\n");
 
-    int ans = get_one_char_ans();
+    int ans;
+    if ((ans = getchar()) == EOF)
+    {
+        printf("EOF FOUND! SHUTTING DOWN!\n");
+        abort();
+    }
+    clear_buf();
 
     if (ans == 't'){
         run_tests();
@@ -132,7 +138,12 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
         printf( "If you want to continue, enter any letter except q. "
                 "Otherwise enter q to exit.\n");
 
-        ans = get_one_char_ans();
+        if ((ans = getchar()) == EOF)
+        {
+            printf("EOF FOUND! SHUTTING DOWN!\n");
+            abort();
+        }
+        clear_buf();
 
         if (ans == 'q')
         {
@@ -253,7 +264,13 @@ void run_tests(void)
             "Example line: 1 -2 1 1 1\n"
             "If you are ready, enter any letter except q, or enter q to exit.\n", TESTS_FILE_NAME);
 
-    int ans = get_one_char_ans();
+    int ans;
+    if ((ans = getchar()) == EOF)
+    {
+        printf("EOF FOUND! SHUTTING DOWN!\n");
+        abort();
+    }
+    clear_buf();
 
     if (ans == 'q')
     {
@@ -415,7 +432,13 @@ CoeffsSquare get_input(void)
 
         printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", a, b, c);
 
-        int ans = get_one_char_ans();
+        int ans;
+        if ((ans = getchar()) == EOF)
+        {
+            printf("EOF FOUND! SHUTTING DOWN!\n");
+            abort();
+        }
+        clear_buf();
 
         if (ans == 'y')
         {
@@ -438,21 +461,6 @@ int are_dbls_equal(double x, double y)
 int is_dbl_zero(const double x)
 {
     return fabs(x) < DBL_EPSILON;
-}
-
-int get_one_char_ans(void)
-{
-    int c = getchar();
-
-    if (c == EOF)
-    {
-        printf("EOF FOUND! SHUTTING DOWN!\n");
-        abort();
-    }
-
-    clear_buf();
-
-    return c;
 }
 
 void clear_buf(void)
