@@ -5,7 +5,6 @@ SQUARE SOLVER, также известная как квадратка
 Заметки:
 исправить -0
 парсинг командной строки, глобальная переменная
-убрать страшную вложенность с помощью goto
 исправить чтобы можно было писать пробелы перед вводом
 считать количество верно и неверно пройденных тестов
 */
@@ -174,18 +173,23 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
             return {ERROR, 0, 0};
         }
 
+        if (is_dbl_zero(x1)) x1 = fabs(x1);
+        if (is_dbl_zero(x2)) x2 = fabs(x2);
+
         return {TWO_REAL_ROOTS, x1, x2};
     }
     else if ( is_dbl_zero(discriminant) )//D == 0
     {
         double x1 = -coeffs.b / (2.0*coeffs.a);
-        double x2 = x1;
 
         if (!isfinite(x1))
         {
             printf("Overflow during computing roots!\n");
             return {ERROR, 0, 0};
         }
+
+        if (is_dbl_zero(x1)) x1 = fabs(x1);
+        double x2 = x1;
 
         return {ONE_REAL_ROOT, x1, x2};
     }
@@ -223,6 +227,8 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs)
             printf("Overflow during computing the lineal root!\n");
             return {ERROR, 0};
         }
+
+        if (is_dbl_zero(x1)) x1 = fabs(x1); //лекарство от -0
 
         return {LINEAL_ROOT, x1};
     }

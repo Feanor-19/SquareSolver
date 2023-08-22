@@ -5,7 +5,6 @@ SQUARE SOLVER, также известная как квадратка
 Заметки:
 исправить -0
 парсинг командной строки, глобальная переменная
-убрать страшную вложенность с помощью goto
 исправить чтобы можно было писать пробелы перед вводом
 считать количество верно и неверно пройденных тестов
 */
@@ -339,70 +338,67 @@ void run_tests(void)
             printf("Solution codes don't match! Test solution code: %d, "
             "in fact solution code: %d. Test FAILED!\n", test_sol_code, (int) fact_sol.res);
         }
-        
+
         //solution code верный
-            printf("Solution codes match: %d!\n", test_sol_code);
+        printf("Solution codes match: %d!\n", test_sol_code);
 
-            switch (test_sol_code)
-            {
-                case ZERO_REAL_ROOTS:
-                case NO_SOLUTION:
-                case INFINITE_SOLUTIONS:
-                case ERROR:
-                    printf("Great, no roots to check in this case. Test passed!\n");
-                    break;
-                case ONE_REAL_ROOT:
-                case LINEAL_ROOT:
-                    if (fscanf(file_inp, "%lg", &test_x1) == 1)
+        switch (test_sol_code)
+        {
+            case ZERO_REAL_ROOTS:
+            case NO_SOLUTION:
+            case INFINITE_SOLUTIONS:
+            case ERROR:
+                printf("Great, no roots to check in this case. Test passed!\n");
+                break;
+            case ONE_REAL_ROOT:
+            case LINEAL_ROOT:
+                if (fscanf(file_inp, "%lg", &test_x1) == 1)
+                {
+                    if (are_dbls_equal(fact_sol.x1, test_x1))
                     {
-                        if (are_dbls_equal(fact_sol.x1, test_x1))
-                        {
-                            printf("Test and fact roots match! Great, test passed!\n");
-                        }
-                        else
-                        {
-                            printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", test_x1, fact_sol.x1);
-                        }
+                        printf("Test and fact roots match! Great, test passed!\n");
                     }
                     else
                     {
-                        printf("This test implies one root, but I can't find a real number in the line:\n");
-                        echo_line(file_inp, stdin);
-                        printf("\nSkipping test...\n");
+                        printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", test_x1, fact_sol.x1);
                     }
-                    break;
-                case TWO_REAL_ROOTS:
-                    if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) == 2)
+                }
+                else
+                {
+                    printf("This test implies one root, but I can't find a real number in the line:\n");
+                    echo_line(file_inp, stdin);
+                    printf("\nSkipping test...\n");
+                }
+                break;
+            case TWO_REAL_ROOTS:
+                if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) == 2)
+                {
+                    if  (
+                        (are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2))
+                        ||
+                        (are_dbls_equal(fact_sol.x1, test_x2) && are_dbls_equal(fact_sol.x2, test_x1))
+                        )
                     {
-                        if  (
-                            (are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2))
-                            ||
-                            (are_dbls_equal(fact_sol.x1, test_x2) && are_dbls_equal(fact_sol.x2, test_x1))
-                            )
-                        {
-                            printf("Test and fact roots match! Great, test passed!\n");
-                        }
-                        else
-                        {
-                            printf("Test and fact roots DON'T match! x1: "
-                            "%lg and %lg, x2: %lg and %lg. "
-                            "Test FAILED!\n", test_x1, fact_sol.x1, test_x2, fact_sol.x2);
-                        }
+                        printf("Test and fact roots match! Great, test passed!\n");
                     }
                     else
                     {
-                        printf("This test implies two roots, but I can't find two real numbers in the line:\n");
-                        echo_line(file_inp, stdin);
-                        printf("\nSkipping test...\n");
+                        printf("Test and fact roots DON'T match! x1: "
+                        "%lg and %lg, x2: %lg and %lg. "
+                        "Test FAILED!\n", test_x1, fact_sol.x1, test_x2, fact_sol.x2);
                     }
-                    break;
-                default:
-                    assert(0 && "unreachable default case in switch reached!"); //недопустимый case
-                    break;
-            }
-        
-
-
+                }
+                else
+                {
+                    printf("This test implies two roots, but I can't find two real numbers in the line:\n");
+                    echo_line(file_inp, stdin);
+                    printf("\nSkipping test...\n");
+                }
+                break;
+            default:
+                assert(0 && "unreachable default case in switch reached!"); //недопустимый case
+                break;
+        }
 
         print_stars(STARS_STRIP_WIDTH);
         printf("\n");
