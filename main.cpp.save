@@ -17,14 +17,16 @@ const int STARS_STRIP_WIDTH = 40;
 
 enum SolveRes
 {
-    ZERO_REAL_ROOTS = 0,
-    ONE_REAL_ROOT,
-    TWO_REAL_ROOTS,
-    NO_SOLUTION,
-    LINEAL_ROOT,
-    INFINITE_SOLUTIONS,
-    ERROR,
+    ZERO_REAL_ROOTS     = 0,
+    ONE_REAL_ROOT       = 1,
+    TWO_REAL_ROOTS      = 2,
+    NO_SOLUTION         = 3,
+    LINEAL_ROOT         = 4,
+    INFINITE_SOLUTIONS  = 5,
+    ERROR               = 6,
 };
+const int SOLVE_RES_MIN_CODE = 0; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
+const int SOLVE_RES_MAX_CODE = 6; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
 
 struct CoeffsSquare
 {
@@ -76,6 +78,8 @@ double mul_dbl(const double a, const double b, int * const res);
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
 double div_dbl(const double a, const double b, int * const res);
 
+int are_dbls_equal(double x, double y);
+
 //проверка, является x нулём
 int is_dbl_zero(const double x);
 
@@ -84,6 +88,11 @@ int get_one_char_ans(void);
 
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
+
+int is_dbl_ok(double x);
+
+//все символы до конца строки из from копируются в to
+void echo_line(FILE* from, FILE* to);
 
 void print_stars(int number);
 
@@ -285,15 +294,97 @@ void run_tests(void)
     }
 
     int counter = 1;
-    double a = NAN, b = NAN, c = NAN, x1 = NAN, x2 = NAN;
-    int sol_code = 0;
-    while (fscanf(file_inp, "%lg %lg %lg %d", &a, &b, &c, &sol_code) == 4)
+    double test_a = NAN, test_b = NAN, test_c = NAN, test_x1 = NAN, test_x2 = NAN;
+    int test_sol_code = 0;
+    while (fscanf(file_inp, "%lg %lg %lg %d", &test_a, &test_b, &test_c, &test_sol_code) == 4)
     {
         print_stars(STARS_STRIP_WIDTH);
         printf("\nTest %d:\n", counter++);
-        
-        
-        
+
+        if ( ( !is_dbl_ok(test_a) || !is_dbl_ok(test_b) || !is_dbl_ok(test_c) ))
+        {
+            printf("Sorry, coefficient(s) is/are out of supported range. "
+            "Skipping this test...\n");
+        }
+        else //коэффициенты норм
+        {
+            if (test_sol_code < SOLVE_RES_MIN_CODE || test_sol_code > SOLVE_RES_MAX_CODE)
+            {
+                printf("Wrong solution code: %d! Skipping this test...\n", test_sol_code);
+            }
+            else //solution code нормальный
+            {
+                printf("Test params: %lg %lg %lg\n", test_a, test_b, test_c);
+
+                SolutionSquare fact_sol = solve_square( (CoeffsSquare) { test_a, test_b, test_c } );
+
+                if ( (int) fact_sol.res != test_sol_code)
+                {
+                    printf("Solution codes don't match! Test solution code: %d, "
+                    "in fact solution code: %d.\n", test_sol_code, (int) fact_sol.res);
+                }
+                else
+                {
+                    printf("Solution codes match: %d!\n", test_sol_code);
+
+                    switch (test_sol_code)
+                    {
+                        case ZERO_REAL_ROOTS:
+                        case NO_SOLUTION:
+                        case INFINITE_SOLUTIONS:
+                        case ERROR:
+                            printf("Great, no roots to check in this case. Test passed!\n");
+                            break;
+                        case ONE_REAL_ROOT:
+                        case LINEAL_ROOT:
+                            if (fscanf(file_inp, "%lg", &test_x1) == 1)
+                            {
+                                if (are_dbls_equal(fact_sol.x1, test_x1))
+                                {
+                                    printf("Test and fact roots match! Great, test passed!\n");
+                                }
+                                else
+                                {
+                                    printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", test_x1, fact_sol.x1);
+                                }
+                            }
+                            else
+                            {
+                                printf("This test implies one root, but I can't find a real number in the line:\n");
+                                echo_line(file_inp, stdin);
+                                printf("\nSkipping test...\n");
+                            }
+                            break;
+                        case TWO_REAL_ROOTS:
+                            if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) == 2)
+                            {
+                                if (are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2)
+                                ||  )
+                                {
+                                    printf("Test and fact roots match! Great, test passed!\n");
+                                }
+                                else
+                                {
+                                    printf("Test and fact roots DON'T match! x1: "
+                                    "%lg and %lg, x2: %lg and %lg. "
+                                    "Test FAILED!\n", test_x1, fact_sol.x1, test_x2, fact_sol.x2);
+                                }
+                            }
+                            else
+                            {
+                                printf("This test implies two roots, but I can't find two real numbers in the line:\n");
+                                echo_line(file_inp, stdin);
+                                printf("\nSkipping test...\n");
+                            }
+                            break;
+                        default:
+                            assert(0); //недопустимый case
+                            break;
+                    }
+                }
+            }
+        }
+
         print_stars(STARS_STRIP_WIDTH);
         printf("\n");
     }
@@ -307,8 +398,10 @@ void run_tests(void)
     {
         printf("The next line can't be read:\n");
 
-        int symbol;
-        while ((symbol = fgetc(file_inp)) != '\n') putchar(symbol);
+        //int symbol;
+        //while ((symbol = fgetc(file_inp)) != '\n') putchar(symbol);
+        echo_line(file_inp, stdin);
+        printf("\n");
 
         printf("Shutting down. Goodbye!\n");
     }
@@ -334,7 +427,7 @@ CoeffsSquare get_input(void)
         }
         clear_buf();
 
-        if ( isfinite(a) || fabs(b) >= DBL_MAX || fabs(c) >= DBL_MAX )
+        if ( !is_dbl_ok(a) || !is_dbl_ok(b) || !is_dbl_ok(c) )
         {
             printf( "Sorry, number(s) is/are out of supported range. Please enter "
                     "something with smaller absolute value.\n");
@@ -422,6 +515,11 @@ double div_dbl(const double a, const double b, int * const res)
     return a / b;
 }
 
+int are_dbls_equal(double x, double y)
+{
+    return is_dbl_zero(x - y);
+}
+
 int is_dbl_zero(const double x)
 {
     return fabs(x) < DBL_EPSILON;
@@ -449,6 +547,17 @@ void clear_buf(void)
     */
     while ( getchar() != '\n' ) continue;
     return;
+}
+
+int is_dbl_ok(double x)
+{
+    return fabs(x) < DBL_MAX;
+}
+
+void echo_line(FILE* from, FILE* to)
+{
+    int symbol;
+    while ((symbol = fgetc(from)) != '\n') fputc(symbol, to);
 }
 
 void print_stars(int number)
