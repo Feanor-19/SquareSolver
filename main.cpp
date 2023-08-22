@@ -55,6 +55,9 @@ double mul_dbl(double a, double b, int* res);
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
 double div_dbl(double a, double b, int* res);
 
+//проверка, является x нулём
+int is_dbl_zero(double x);
+
 //получает один символ, после этого "съедает" всё до конца строчки
 int get_one_char_ans();
 
@@ -191,7 +194,7 @@ Solution solve(Coeffs coeffs)
 
         return {TWO_REAL_ROOTS, x1, x2};
     }
-    else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
+    else if ( is_dbl_zero(discriminant) )//D == 0
     {
         //x1 = -b / (2.0*a);
         double x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
@@ -323,6 +326,11 @@ double div_dbl(double a, double b, int* res)
     }
 
     return a / b;
+}
+
+int is_dbl_zero(double x)
+{
+    return fabs(x) < DBL_EPSILON;
 }
 
 int get_one_char_ans()
