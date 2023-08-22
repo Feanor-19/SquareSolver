@@ -12,6 +12,9 @@ SQUARE SOLVER, также известная как квадратка
 #include <math.h>
 #include <assert.h>
 
+const char *TESTS_FILE_NAME = "SquareSolverTests.txt";
+const int STARS_STRIP_WIDTH = 40;
+
 enum SolveRes
 {
     ZERO_REAL_ROOTS = 0,
@@ -55,6 +58,9 @@ SolutionSquare solve_square(const CoeffsSquare coeffs);
 //получает коэфф линейного уравнения и возвращает результат решения с корнями
 SolutionLinear solve_linear(const CoeffsLinear coeffs);
 
+//читает тесты из файла, сообщает о результатах прохождения каждого теста
+void run_tests(void);
+
 //возвращает коэффициенты, старается добиться правильного ввода
 CoeffsSquare get_input(void);
 
@@ -79,20 +85,21 @@ int get_one_char_ans(void);
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
 
+int is_dbl_ok(double x);
+
+void print_stars(int number);
+
 int main(void)
 {
     printf( "# Square Solver by Feanor19, created to solve square equations.\n"
             "Hello fellow engineers! Enter any letter except t to begin."
-            "If you want to run tests, please enter letter t.\n");
+            " If you want to run tests, please enter letter t.\n");
 
     int ans = get_one_char_ans();
 
-    if (ans == 't')
-    {
-        printf("Tests are not supported yet. :-(. Let's pretend you entered a different letter.\n");
-        //*вызов функции которой пока нет*
-        //return 0; //чтобы завершить программу
-        //break; !!!ВРЕМЕННО
+    if (ans == 't'){
+        run_tests();
+        return 0; //чтобы завершить программу
     }
 
     while (1)//выход через return
@@ -156,30 +163,6 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     //особые случаи
     if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
     {
-//        if ( fabs(coeffs.b) < DBL_EPSILON ) //b == 0
-//        {
-//            if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
-//            {
-//                return {INFINITE_SOLUTIONS};
-//            }
-//            else //c != 0
-//            {
-//                return {NO_SOLUTION};
-//            }
-//        }
-//        else //b != 0
-//        {
-//            //x1 = -c/b;
-//            double x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
-//
-//            if (ovrfl)
-//            {
-//                printf("Overflow during computing the lineal root!\n");
-//                return {ERROR};
-//            }
-//
-//            return {LINEAL_ROOT, x1, x1};
-//        }
         SolutionLinear sol = solve_linear( (CoeffsLinear) {coeffs.b, coeffs.c} );
         return { sol.res, sol.x, 0 };
     }
@@ -197,11 +180,13 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
     if ( discriminant > 0.0 )//D > 0
     {
+        double d_sqrt = sqrt(discriminant);
+
         //x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        double x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x1 = div_dbl( add_dbl( -coeffs.b, +d_sqrt, &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         //x2 = (-b - sqrt(discriminant)) / (2.0*a);
-        double x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x2 = div_dbl( add_dbl( -coeffs.b, -d_sqrt, &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         if (ovrfl)
         {
@@ -267,6 +252,70 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs)
     }
 }
 
+void run_tests(void)
+{
+    printf( "Please create file with name \"%s\" "
+            "in the same folder this program runs in to "
+            "do automatic tests. Every line of the file should include "
+            "three real numbers separated by spaces (square equation coefficients), "
+            "solution code (see below) and from zero to two roots (depends on "
+            "solution code).\nSolution codes:\n"
+            "ZERO_REAL_ROOTS    = 0,\n"
+            "ONE_REAL_ROOT      = 1,\n"
+            "TWO_REAL_ROOTS     = 2,\n"
+            "NO_SOLUTION        = 3,\n"
+            "LINEAL_ROOT        = 4,\n"
+            "INFINITE_SOLUTIONS = 5,\n"
+            "ERROR              = 6.\n"
+            "Example line: 1 -2 1 1 1\n"
+            "If you are ready, enter any letter except q, or enter q to exit.\n", TESTS_FILE_NAME);
+
+    int ans = get_one_char_ans();
+
+    if (ans == 'q')
+    {
+        printf("Goodbye!\n");
+        return;
+    }
+
+    FILE* file_inp = fopen(TESTS_FILE_NAME, "r");
+
+    if (file_inp == NULL)
+    {
+        printf("ERROR: Can't open file! Please restart to try again.\n");
+        return;
+    }
+
+    int counter = 1;
+    double a = NAN, b = NAN, c = NAN, x1 = NAN, x2 = NAN;
+    int sol_code = 0;
+    while (fscanf(file_inp, "%lg %lg %lg %d", &a, &b, &c, &sol_code) == 4)
+    {
+        print_stars(STARS_STRIP_WIDTH);
+        printf("\nTest %d:\n", counter++);
+
+
+
+        print_stars(STARS_STRIP_WIDTH);
+        printf("\n");
+    }
+
+    if ( fgetc(file_inp) == EOF )
+    {
+        printf("End of file reached, so work is done. Goodbye!\n");
+        return;
+    }
+    else
+    {
+        printf("The next line can't be read:\n");
+
+        int symbol;
+        while ((symbol = fgetc(file_inp)) != '\n') putchar(symbol);
+
+        printf("Shutting down. Goodbye!\n");
+    }
+}
+
 CoeffsSquare get_input(void)
 {
     /*
@@ -287,7 +336,7 @@ CoeffsSquare get_input(void)
         }
         clear_buf();
 
-        if ( fabs(a) >= DBL_MAX || fabs(b) >= DBL_MAX || fabs(c) >= DBL_MAX )
+        if ( !is_dbl_ok(a) || !is_dbl_ok(b) || !is_dbl_ok(c) )
         {
             printf( "Sorry, number(s) is/are out of supported range. Please enter "
                     "something with smaller absolute value.\n");
@@ -402,4 +451,15 @@ void clear_buf(void)
     */
     while ( getchar() != '\n' ) continue;
     return;
+}
+
+int is_dbl_ok(double x)
+{
+    return fabs(x) < DBL_MAX;
+}
+
+void print_stars(int number)
+{
+    assert(number > 0);
+    while (number-- > 0) putchar('*');
 }
