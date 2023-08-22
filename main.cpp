@@ -66,18 +66,6 @@ void run_tests(void);
 //возвращает коэффициенты, старается добиться правильного ввода
 CoeffsSquare get_input(void);
 
-//складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
-//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double add_dbl(const double a, const double b, int * const res);
-
-//умножает a и b, результат умножения возвращает, а если по пути произошло переполнение,
-//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double mul_dbl(const double a, const double b, int * const res);
-
-//делит a на b, результат деления возвращает, а если по пути произошло переполнение,
-//пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
-double div_dbl(const double a, const double b, int * const res);
-
 int are_dbls_equal(double x, double y);
 
 //проверка, является x нулём
@@ -89,14 +77,12 @@ int get_one_char_ans(void);
 //старается "съесть" строчку до конца, включая символ конца строки, из стандартного ввода
 void clear_buf(void);
 
-int is_dbl_ok(double x);
-
 //все символы до конца строки из from копируются в to
 void echo_line(FILE* from, FILE* to);
 
 void print_stars(int number);
 
-int main(void)
+int main(int argc, const char *argv[]) // argv[] = (* const argv)
 {
     printf( "# Square Solver by Feanor19, created to solve square equations.\n"
             "Hello fellow engineers! Enter any letter except t to begin."
@@ -165,8 +151,6 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
     assert(isfinite(coeffs.a) && isfinite(coeffs.b) && isfinite(coeffs.c));
 
-    int ovrfl = 0; //остлеживание переполнения при вычислениях
-
     //особые случаи
     if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
     {
@@ -176,26 +160,22 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
     //обычные случаи, a != 0
 
-    //double discriminant = b*b - 4.0*a*c;
-    double discriminant = add_dbl(mul_dbl(coeffs.b, coeffs.b, &ovrfl), -mul_dbl(4.0, mul_dbl(coeffs.a, coeffs.c, &ovrfl), &ovrfl), &ovrfl);
+    double discriminant = coeffs.b*coeffs.b - 4.0*coeffs.a*coeffs.c;
 
-    if (ovrfl)
+    if (!isfinite(discriminant))
     {
         printf("Overflow during computing discriminant!\n");
         return {ERROR, 0, 0};
     }
 
-    if ( discriminant > 0.0 )//D > 0
+    if ( discriminant > DBL_EPSILON )//D > 0
     {
         double d_sqrt = sqrt(discriminant);
 
-        //x1 = (-b + sqrt(discriminant)) / (2.0*a);
-        double x1 = div_dbl( add_dbl( -coeffs.b, +d_sqrt, &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x1 = (-coeffs.b + d_sqrt) / (2.0*coeffs.a);
+        double x2 = (-coeffs.b - d_sqrt) / (2.0*coeffs.a);
 
-        //x2 = (-b - sqrt(discriminant)) / (2.0*a);
-        double x2 = div_dbl( add_dbl( -coeffs.b, -d_sqrt, &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
-
-        if (ovrfl)
+        if (!isfinite(x1) || !isfinite(x2))
         {
             printf("Overflow during computing roots!\n");
             return {ERROR, 0, 0};
@@ -205,11 +185,10 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     }
     else if ( is_dbl_zero(discriminant) )//D == 0
     {
-        //x1 = -b / (2.0*a);
-        double x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
+        double x1 = -coeffs.b / (2.0*coeffs.a);
         double x2 = x1;
 
-        if (ovrfl)
+        if (!isfinite(x1))
         {
             printf("Overflow during computing roots!\n");
             return {ERROR, 0, 0};
@@ -217,7 +196,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
         return {ONE_REAL_ROOT, x1, x2};
     }
-    else if (discriminant < 0.0)//D < 0
+    else if (discriminant < -DBL_EPSILON)//D < 0
     {
         return {ZERO_REAL_ROOTS, 0, 0};
     }
@@ -231,8 +210,6 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
 SolutionLinear solve_linear(const CoeffsLinear coeffs)
 {
-    int ovrfl = 0;
-
     if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
     {
         if ( fabs(coeffs.b) < DBL_EPSILON )//b == 0
@@ -246,10 +223,9 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs)
     }
     else //a != 0
     {
-        //x1 = -b/a;
-        double x1 = div_dbl(-coeffs.b, coeffs.a, &ovrfl);
+        double x1 = -coeffs.b/coeffs.a;
 
-        if (ovrfl)
+        if (!isfinite(x1))
         {
             printf("Overflow during computing the lineal root!\n");
             return {ERROR, 0};
@@ -301,7 +277,7 @@ void run_tests(void)
         print_stars(STARS_STRIP_WIDTH);
         printf("\nTest %d:\n", counter++);
 
-        if ( ( !is_dbl_ok(test_a) || !is_dbl_ok(test_b) || !is_dbl_ok(test_c) ))
+        if ( ( !isfinite(test_a) || !isfinite(test_b) || !isfinite(test_c) ))
         {
             printf("Sorry, coefficient(s) is/are out of supported range. "
             "Skipping this test...\n");
@@ -359,9 +335,9 @@ void run_tests(void)
                             if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) == 2)
                             {
                                 if  (
-                                    are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2)
+                                    (are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2))
                                     ||
-                                    are_dbls_equal(fact_sol.x1, test_x2) && are_dbls_equal(fact_sol.x2, test_x1)
+                                    (are_dbls_equal(fact_sol.x1, test_x2) && are_dbls_equal(fact_sol.x2, test_x1))
                                     )
                                 {
                                     printf("Test and fact roots match! Great, test passed!\n");
@@ -430,7 +406,7 @@ CoeffsSquare get_input(void)
         }
         clear_buf();
 
-        if ( !is_dbl_ok(a) || !is_dbl_ok(b) || !is_dbl_ok(c) )
+        if ( !isfinite(a) || !isfinite(b) || !isfinite(c) )
         {
             printf( "Sorry, number(s) is/are out of supported range. Please enter "
                     "something with smaller absolute value.\n");
@@ -452,70 +428,6 @@ CoeffsSquare get_input(void)
             return {a, b, c};
         }
     }
-}
-
-double add_dbl(const double a, const double b, int * const res)
-{
-    /*
-    Примечание:
-    1) переполнение может быть только если
-    оба слагаемых одного знака
-    2) не собрано в один if для читаемости и логики
-    */
-
-    assert(res!=NULL);
-
-    if ( (a > 0 && b > 0) || (a < 0 && b < 0) )
-    {
-        if (fabs(a) > DBL_MAX - fabs(b))
-        {
-            *res = 1;
-        }
-    }
-
-    return a + b;
-}
-
-double mul_dbl(const double a, const double b, int * const res)
-{
-    /*
-    Примечание:
-    1) только если оба множителя больше 1, может произойти переполнение
-    2) не собрано в один if для читаемости и логики
-    */
-
-    assert(res!=NULL);
-
-    if (a > 1 && b > 1)
-    {
-        if ( fabs(a) > DBL_MAX / fabs(b) )
-        {
-            *res = 1;
-        }
-    }
-
-    return a * b;
-}
-
-double div_dbl(const double a, const double b, int * const res)
-{
-    /*
-    Примечание:
-    1) только если делим на число < 1, может произойти переполнение
-    2) не собрано в один if для читаемости и логики
-    */
-
-    assert(res!=NULL);
-
-    if (b < 1)
-    {
-        if ( fabs(a) > DBL_MAX * fabs(b) )
-        {
-            *res = 1;
-        }
-    }
-
-    return a / b;
 }
 
 int are_dbls_equal(double x, double y)
@@ -552,14 +464,9 @@ void clear_buf(void)
     return;
 }
 
-int is_dbl_ok(double x)
-{
-    return fabs(x) < DBL_MAX;
-}
-
 void echo_line(FILE* from, FILE* to)
 {
-    int symbol;
+    int symbol = 0;
     while ((symbol = fgetc(from)) != '\n') fputc(symbol, to);
 }
 
