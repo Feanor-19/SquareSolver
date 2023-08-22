@@ -5,11 +5,10 @@ SQUARE SOLVER, также известная как квадратка
 Заметки:
 
 парсинг командной строки, глобальная переменная
-switch sol res в отдельную ф-ю
-вместо q y/n
 assert разобрать если длинные
 к некоторым assert добавить описание
 убрать страшную вложенность с помощью goto
+исправить чтобы можно было писать пробелы перед вводом
 */
 
 #include <stdio.h>
@@ -118,8 +117,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
 
         print_square_solution(solution);
 
-        printf( "If you want to continue, enter any letter except q. "
-                "Otherwise enter q to exit.\n");
+        printf( "Do you want to continue? [y/n]\n");
 
         if ((ans = getchar()) == EOF)
         {
@@ -128,7 +126,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
         }
         clear_buf();
 
-        if (ans == 'q')
+        if (ans == 'n')
         {
             printf("Goodbye, fellow engineers!\n");
             return 0;
@@ -143,7 +141,9 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     получает структуру с коэфф и возвращает структурой результат решения с корнями
     */
 
-    assert(isfinite(coeffs.a) && isfinite(coeffs.b) && isfinite(coeffs.c));
+    assert(isfinite(coeffs.a) && "coeff a is inf");
+    assert(isfinite(coeffs.b) && "coeff b is inf");
+    assert(isfinite(coeffs.c) && "coeff c is inf");
 
     //особые случаи
     if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
@@ -196,7 +196,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     }
 
     //если все случаи учтены, программа не должна добраться до этой строчки
-    assert(0);
+    assert(0 && "undefined discriminant! Unreachable line reached!");
 
     //по-хорошему строчка ниже никогда не должна выполняться, но иначе варнинг
     return {ERROR, 0, 0};
@@ -276,7 +276,7 @@ void run_tests(void)
             "INFINITE_SOLUTIONS = 5,\n"
             "ERROR              = 6.\n"
             "Example line: 1 -2 1 1 1\n"
-            "If you are ready, enter any letter except q, or enter q to exit.\n", TESTS_FILE_NAME);
+            "Do you want to continue? [y/n].\n", TESTS_FILE_NAME);
 
     int ans;
     if ((ans = getchar()) == EOF)
@@ -286,7 +286,7 @@ void run_tests(void)
     }
     clear_buf();
 
-    if (ans == 'q')
+    if (ans == 'n')
     {
         printf("Goodbye!\n");
         return;
@@ -388,7 +388,7 @@ void run_tests(void)
                             }
                             break;
                         default:
-                            assert(0); //недопустимый case
+                            assert(0 && "unreachable default case in switch reached!"); //недопустимый case
                             break;
                     }
                 }
@@ -458,9 +458,9 @@ CoeffsSquare get_input(void)
         {
             printf("Great!\n");
 
-            //isnormal проверяет что лежит обычное число, а не inf, nan и подобные
-            //а ноль за нормальное не считает...
-            assert(isfinite(a) && isfinite(b) && isfinite(c));
+            assert(isfinite(a) && "coeff a is inf");
+            assert(isfinite(b) && "coeff b is inf");
+            assert(isfinite(c) && "coeff c is inf");
 
             return {a, b, c};
         }
