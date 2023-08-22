@@ -63,12 +63,11 @@ void clear_buf(void);
 
 int main(void)
 {
-    printf( "Hello fellow engineers! Enter any letter except t to begin."
+    printf( "# Square Solver by Feanor19, created to solve square equations.\n"
+            "Hello fellow engineers! Enter any letter except t to begin."
             "If you want to run tests, please enter letter t.\n");
 
     int ans = get_one_char_ans();
-
-    //double a = 0, b = 0, c = 0;
 
     if (ans == 't')
     {
@@ -132,9 +131,7 @@ Solution solve(Coeffs coeffs)
     получает структуру с коэфф и возвращает структурой результат решения с корнями
     */
 
-    //isnormal проверяет что лежит обычное число, а не inf, nan и подобные
-    //а ноль за нормальное не считает...
-    assert((coeffs.a == 0 or isnormal(coeffs.a)) && (coeffs.b == 0 or isnormal(coeffs.b)) && (coeffs.c == 0 or isnormal(coeffs.c)));
+    assert(isfinite(coeffs.a) && isfinite(coeffs.b) && isfinite(coeffs.c));
 
     int ovrfl = 0; //остлеживание переполнения при вычислениях
 
@@ -154,7 +151,7 @@ Solution solve(Coeffs coeffs)
         }
         else //b != 0
         {
-            //*p_x1 = -c/b;
+            //x1 = -c/b;
             double x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
 
             if (ovrfl)
@@ -180,10 +177,10 @@ Solution solve(Coeffs coeffs)
 
     if ( discriminant > 0.0 )//D > 0
     {
-        //*p_x1 = (-b + sqrt(discriminant)) / (2.0*a);
+        //x1 = (-b + sqrt(discriminant)) / (2.0*a);
         double x1 = div_dbl( add_dbl( -coeffs.b, +sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
-        //*p_x2 = (-b - sqrt(discriminant)) / (2.0*a);
+        //x2 = (-b - sqrt(discriminant)) / (2.0*a);
         double x2 = div_dbl( add_dbl( -coeffs.b, -sqrt(discriminant), &ovrfl ), mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
 
         if (ovrfl)
@@ -196,7 +193,7 @@ Solution solve(Coeffs coeffs)
     }
     else if ( fabs(discriminant) < DBL_EPSILON )//D == 0
     {
-        //*p_x1 = -b / (2.0*a);
+        //x1 = -b / (2.0*a);
         double x1 = div_dbl( -coeffs.b, mul_dbl(2.0, coeffs.a, &ovrfl), &ovrfl );
         double x2 = x1;
 
@@ -226,7 +223,7 @@ Coeffs get_input(void)
     Получает три long double числа из входного потока (введённые через пробел)
     и возвращает в виде структуры. Старается добиться от пользователя ввода корректных чисел.
     */
-    double a = 0, b = 0, c = 0;
+    double a = NAN, b = NAN, c = NAN;
 
     while( 1 ){ //выход из цикла через return в случае нужного ввода!!!
         printf( "Enter real coefficients a, b, c in order "
@@ -257,7 +254,7 @@ Coeffs get_input(void)
 
             //isnormal проверяет что лежит обычное число, а не inf, nan и подобные
             //а ноль за нормальное не считает...
-            assert((a == 0 or isnormal(a)) && (b == 0 or isnormal(b)) && (c == 0 or isnormal(c)));
+            assert(isfinite(a) && isfinite(b) && isfinite(c));
 
             return {a, b, c};
         }
