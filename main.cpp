@@ -23,25 +23,40 @@ enum SolveRes
     ERROR,
 };
 
-struct Coeffs
+struct CoeffsSquare
 {
     double a;
     double b;
     double c;
 };
 
-struct Solution
+struct CoeffsLinear
+{
+    double a;
+    double b;
+};
+
+struct SolutionSquare
 {
     SolveRes res;
     double x1;
     double x2;
 };
 
-//получает коэфф и возвращает результат решения с корнями
-Solution solve(const Coeffs coeffs);
+struct SolutionLinear
+{
+    SolveRes res;
+    double x;
+};
+
+//получает коэфф квадратного уравнения и возвращает результат решения с корнями
+SolutionSquare solve_square(const CoeffsSquare coeffs);
+
+//получает коэфф линейного уравнения и возвращает результат решения с корнями
+SolutionLinear solve_linear(const CoeffsLinear coeffs);
 
 //возвращает коэффициенты, старается добиться правильного ввода
-Coeffs get_input(void);
+CoeffsSquare get_input(void);
 
 //складывает a и b, результат сложения возвращает, а если по пути произошло переполнение,
 //пишет в res НЕ 0, если не было переполнения - НЕ МЕНЯЕТ значение res
@@ -82,9 +97,9 @@ int main(void)
 
     while (1)//выход через return
     {
-        Coeffs coeffs = get_input();
+        CoeffsSquare coeffs = get_input();
 
-        Solution solution = solve(coeffs);
+        SolutionSquare solution = solve_square(coeffs);
 
         switch (solution.res)
         {
@@ -128,7 +143,7 @@ int main(void)
     return 0;
 }
 
-Solution solve(const Coeffs coeffs)
+SolutionSquare solve_square(const CoeffsSquare coeffs)
 {
     /*
     получает структуру с коэфф и возвращает структурой результат решения с корнями
@@ -141,30 +156,32 @@ Solution solve(const Coeffs coeffs)
     //особые случаи
     if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
     {
-        if ( fabs(coeffs.b) < DBL_EPSILON ) //b == 0
-        {
-            if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
-            {
-                return {INFINITE_SOLUTIONS, 0, 0};
-            }
-            else //c != 0
-            {
-                return {NO_SOLUTION, 0, 0};
-            }
-        }
-        else //b != 0
-        {
-            //x1 = -c/b;
-            double x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
-
-            if (ovrfl)
-            {
-                printf("Overflow during computing the lineal root!\n");
-                return {ERROR, 0, 0};
-            }
-
-            return {LINEAL_ROOT, x1, x1};
-        }
+//        if ( fabs(coeffs.b) < DBL_EPSILON ) //b == 0
+//        {
+//            if ( fabs(coeffs.c) < DBL_EPSILON )//c == 0
+//            {
+//                return {INFINITE_SOLUTIONS};
+//            }
+//            else //c != 0
+//            {
+//                return {NO_SOLUTION};
+//            }
+//        }
+//        else //b != 0
+//        {
+//            //x1 = -c/b;
+//            double x1 = div_dbl(-coeffs.c, coeffs.b, &ovrfl);
+//
+//            if (ovrfl)
+//            {
+//                printf("Overflow during computing the lineal root!\n");
+//                return {ERROR};
+//            }
+//
+//            return {LINEAL_ROOT, x1, x1};
+//        }
+        SolutionLinear sol = solve_linear( (CoeffsLinear) {coeffs.b, coeffs.c} );
+        return { sol.res, sol.x, 0 };
     }
 
     //обычные случаи, a != 0
@@ -220,7 +237,37 @@ Solution solve(const Coeffs coeffs)
     return {ERROR, 0, 0};
 }
 
-Coeffs get_input(void)
+SolutionLinear solve_linear(const CoeffsLinear coeffs)
+{
+    int ovrfl = 0;
+
+    if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
+    {
+        if ( fabs(coeffs.b) < DBL_EPSILON )//b == 0
+        {
+            return {INFINITE_SOLUTIONS, 0};
+        }
+        else //b != 0
+        {
+            return {NO_SOLUTION, 0};
+        }
+    }
+    else //a != 0
+    {
+        //x1 = -b/a;
+        double x1 = div_dbl(-coeffs.b, coeffs.a, &ovrfl);
+
+        if (ovrfl)
+        {
+            printf("Overflow during computing the lineal root!\n");
+            return {ERROR, 0};
+        }
+
+        return {LINEAL_ROOT, x1};
+    }
+}
+
+CoeffsSquare get_input(void)
 {
     /*
     Получает три long double числа из входного потока (введённые через пробел)
