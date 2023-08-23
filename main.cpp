@@ -17,6 +17,7 @@ SQUARE SOLVER, также известная как квадратка
 
 const char *TESTS_FILE_NAME = "SquareSolverTests.txt";
 const int STARS_STRIP_WIDTH = 40;
+const double DBL_PRECISION = DBL_EPSILON * 10;
 
 enum SolveRes
 {
@@ -144,7 +145,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     assert(isfinite(coeffs.c) && "coeff c is inf");
 
     //особые случаи
-    if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
+    if ( fabs(coeffs.a) < DBL_PRECISION ) //a == 0
     {
         SolutionLinear sol = solve_linear( (CoeffsLinear) {coeffs.b, coeffs.c} );
         return { sol.res, sol.x, 0 };
@@ -156,7 +157,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
     if (!isfinite(discriminant)) return {ERROR_OVRFL_DISCR, 0, 0};
 
-    if ( discriminant > DBL_EPSILON )//D > 0
+    if ( discriminant > DBL_PRECISION )//D > 0
     {
         double d_sqrt = sqrt(discriminant);
 
@@ -181,7 +182,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
         return {ONE_REAL_ROOT, x1, x2};
     }
-    else if (discriminant < -DBL_EPSILON)//D < 0
+    else if (discriminant < -DBL_PRECISION)//D < 0
     {
         return {ZERO_REAL_ROOTS, 0, 0};
     }
@@ -195,9 +196,9 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
 SolutionLinear solve_linear(const CoeffsLinear coeffs)
 {
-    if ( fabs(coeffs.a) < DBL_EPSILON ) //a == 0
+    if ( fabs(coeffs.a) < DBL_PRECISION ) //a == 0
     {
-        if ( fabs(coeffs.b) < DBL_EPSILON )//b == 0
+        if ( fabs(coeffs.b) < DBL_PRECISION )//b == 0
         {
             return {INFINITE_SOLUTIONS, 0};
         }
@@ -478,7 +479,7 @@ int are_dbls_equal(double x, double y)
 
 int is_dbl_zero(const double x)
 {
-    return fabs(x) < DBL_EPSILON;
+    return fabs(x) < DBL_PRECISION;
 }
 
 void clear_buf(void)
