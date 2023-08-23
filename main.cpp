@@ -313,7 +313,9 @@ void run_tests(void)
         return;
     }
 
-    int counter = 1;
+    int test_num = 1; //номер теста, только для вывода; в конце в нем хранится кол-во тестов + 1
+    int passed = 0, failed = 0, skipped = 0;
+
     double test_a = NAN, test_b = NAN, test_c = NAN, test_x1 = NAN, test_x2 = NAN;
     int test_sol_code = 0;
     while (fscanf(file_inp, "%lg %lg %lg %d", &test_a, &test_b, &test_c, &test_sol_code) == 4)
@@ -321,20 +323,70 @@ void run_tests(void)
         //если test_sol_code предполагает что корни должны быть, то нужное число читаем,
         //и отдаем в run_one_test(), а потом разберемся, совпадает ли
 
+        switch (test_sol_code)
+        {
+            case LINEAL_ROOT:
+            case ONE_REAL_ROOT:
+                if (fscanf(file_inp, "%lg", &test_x1) != 1)
+                {
+                    printf("This test implies one root, but I can't find a real number in the line:\n");
+                    echo_line(file_inp, stdin);
+                    printf("\nSkipping test...\n");
+                    continue;
+                }
 
+                break;
+            case TWO_REAL_ROOTS:
+                if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) != 2)
+                {
+                    printf("This test implies two roots, but I can't find two real numbers in the line:\n");
+                    echo_line(file_inp, stdin);
+                    printf("\nSkipping test...\n");
+                    continue;
+                }
+
+                break;
+            default:
+                ;
+                break;
+        }
+
+        //теперь корни если должны были быть прочитаны, то находятся в test_x1 и test_x2
+
+        TestRes testRes = run_one_test( {test_a, test_b, test_c, test_sol_code, test_x1, test_x2}, test_num++);
+
+        switch (testRes)
+        {
+            case PASSED:
+                passed+=1;
+                break;
+            case FAILED:
+                failed+=1;
+                break;
+            case SKIPPED:
+                skipped+=1;
+                break;
+            default:
+                assert(0 && "Unsupported case in switch (testRes)!");
+                break;
+        }
 
     }
 
     if ( fgetc(file_inp) == EOF )
     {
-        printf("End of file reached, so work is done. Goodbye!\n");
+        printf("End of file reached, so work is done. Number of tests...\n"
+        "passed: %d\nfailed: %d\nskipped: %d\ntotal: %d\nGoodbye!\n", passed, failed, skipped, test_num-1);
         return;
     }
     else
     {
         printf("The next line can't be read:\n");
-        echo_line(file_inp, stdin);
+        echo_line(file_inp, stdout);
         printf("\n");
+
+        if (test_num > 1) printf("Number of tests before this unreadable line...\n"
+        "passed: %d\nfailed: %d\nskipped: %d\ntotal: %d\nGoodbye!\n", passed, failed, skipped, test_num-1);
 
         printf("Shutting down. Goodbye!\n");
     }
