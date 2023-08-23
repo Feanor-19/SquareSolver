@@ -3,9 +3,7 @@ SQUARE SOLVER, также известная как квадратка
 Примечания:
 (пишу в кодблоксе от Деда)
 Заметки:
-парсинг командной строки, глобальная переменная
 исправить чтобы можно было писать пробелы перед вводом
-считать количество верно и неверно пройденных тестов
 */
 
 #include <stdio.h>
@@ -19,6 +17,17 @@ SQUARE SOLVER, также известная как квадратка
 const char *TESTS_FILE_NAME = "SquareSolverTests.txt";
 const int STARS_STRIP_WIDTH = 40;
 const double DBL_PRECISION = DBL_EPSILON * 10;
+
+enum MainReturnCode
+{
+    NO_ERRORS = 0,
+    EOF_FOUND = 1,
+};
+
+//ниже глобальная переменная, в которой хранится нынешнее возвращаемое всей программой значение;
+//оно может поменяться только один раз, и как только оно становится не NO_ERRORS, программа как можно скорее
+//добирается до main (если не уже там) и возвращает данный код ошибки (все это сделано, чтобы избавиться от abort и exit)
+MainReturnCode GLOBAL_CURRENT_RETURN_CODE = NO_ERRORS;
 
 enum SolveRes
 {
@@ -127,6 +136,8 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
         }
     }
 
+    if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE;
+
     //---
 
     printf( "# Square Solver by Feanor19, created to solve square equations.\n"
@@ -138,6 +149,8 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
     {
         CoeffsSquare coeffs = get_input();
 
+        if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE;
+
         SolutionSquare solution = solve_square(coeffs);
 
         print_square_solution(solution);
@@ -147,17 +160,20 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
         if ((ans = getchar()) == EOF)
         {
             printf("EOF FOUND! SHUTTING DOWN!\n");
-            abort();
+            return EOF_FOUND;
         }
         clear_buf();
 
         if (ans == 'n')
         {
             printf("Goodbye, fellow engineers!\n");
-            return 0;
+            return NO_ERRORS;
         }
     }
-    return 0;
+
+    assert(0 && "Infinite while ended not using return...");
+
+    return NO_ERRORS;
 }
 
 SolutionSquare solve_square(const CoeffsSquare coeffs)
@@ -301,7 +317,10 @@ void run_tests(void)
     if ((ans = getchar()) == EOF)
     {
         printf("EOF FOUND! SHUTTING DOWN!\n");
-        abort();
+
+        GLOBAL_CURRENT_RETURN_CODE = EOF_FOUND;
+
+        return;
     }
     clear_buf();
 
@@ -540,7 +559,10 @@ CoeffsSquare get_input(void)
         if ((ans = getchar()) == EOF)
         {
             printf("EOF FOUND! SHUTTING DOWN!\n");
-            abort();
+
+            GLOBAL_CURRENT_RETURN_CODE = EOF_FOUND;
+
+            return {NAN, NAN, NAN}; //поскорее возврат в main
         }
         clear_buf();
 
