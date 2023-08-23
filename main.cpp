@@ -14,6 +14,7 @@ SQUARE SOLVER, также известная как квадратка
 #include <float.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
 
 const char *TESTS_FILE_NAME = "SquareSolverTests.txt";
 const int STARS_STRIP_WIDTH = 40;
@@ -111,22 +112,27 @@ void print_stars(int number);
 
 int main(int argc, const char *argv[]) // argv[] = (* const argv)
 {
-    printf( "# Square Solver by Feanor19, created to solve square equations.\n"
-            "Hello fellow engineers! Enter any letter except t to begin."
-            " If you want to run tests, please enter letter t.\n");
+    //парсинг командной строки
 
-    int ans;
-    if ((ans = getchar()) == EOF)
+    while (--argc) //пропускаем первый аргумент
     {
-        printf("EOF FOUND! SHUTTING DOWN!\n");
-        abort();
+        if (strcmp(*(++argv), "-tests") == 0)
+        {
+            printf("Test flag found, starting tests...\n");
+            run_tests();
+        }
+        else
+        {
+            printf("ERROR: unknown flag: %s. Skipping this flag...\n", *(argv));
+        }
     }
-    clear_buf();
 
-    if (ans == 't'){
-        run_tests();
-        return 0; //чтобы завершить программу
-    }
+    //---
+
+    printf( "# Square Solver by Feanor19, created to solve square equations.\n"
+            "Hello fellow engineers! Follow instructions on the screen to use this program.\n");
+
+    int ans = 0;
 
     while (1)//выход через return
     {
