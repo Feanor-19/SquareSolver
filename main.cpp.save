@@ -3,7 +3,6 @@ SQUARE SOLVER, также известная как квадратка
 Примечания:
 (пишу в кодблоксе от Деда)
 Заметки:
-исправить -0
 парсинг командной строки, глобальная переменная
 исправить чтобы можно было писать пробелы перед вводом
 считать количество верно и неверно пройденных тестов
@@ -27,7 +26,8 @@ enum SolveRes
     NO_SOLUTION         = 3,
     LINEAL_ROOT         = 4,
     INFINITE_SOLUTIONS  = 5,
-    ERROR               = 6,
+    ERROR_OVRFL_DISCR   = 6,
+    ERROR_OVRFL_ROOTS   = 7,
 };
 const int SOLVE_RES_MIN_CODE = 0; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
 const int SOLVE_RES_MAX_CODE = 6; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
@@ -154,11 +154,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
 
     double discriminant = coeffs.b*coeffs.b - 4.0*coeffs.a*coeffs.c;
 
-    if (!isfinite(discriminant))
-    {
-        printf("Overflow during computing discriminant!\n");
-        return {ERROR, 0, 0};
-    }
+    if (!isfinite(discriminant)) return {ERROR_OVRFL_DISCR, 0, 0};
 
     if ( discriminant > DBL_EPSILON )//D > 0
     {
@@ -167,24 +163,21 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
         double x1 = (-coeffs.b + d_sqrt) / (2.0*coeffs.a);
         double x2 = (-coeffs.b - d_sqrt) / (2.0*coeffs.a);
 
-        if (!isfinite(x1) || !isfinite(x2))
-        {
-            printf("Overflow during computing roots!\n");
-            return {ERROR, 0, 0};
-        }
+        if (!isfinite(x1) || !isfinite(x2)) return {ERROR_OVRFL_ROOTS, 0, 0};
+
+        if (is_dbl_zero(x1)) x1 = fabs(x1);
+        if (is_dbl_zero(x2)) x2 = fabs(x2);
 
         return {TWO_REAL_ROOTS, x1, x2};
     }
     else if ( is_dbl_zero(discriminant) )//D == 0
     {
         double x1 = -coeffs.b / (2.0*coeffs.a);
-        double x2 = x1;
 
-        if (!isfinite(x1))
-        {
-            printf("Overflow during computing roots!\n");
-            return {ERROR, 0, 0};
-        }
+        if (!isfinite(x1)) return {ERROR_OVRFL_ROOTS, 0, 0};
+
+        if (is_dbl_zero(x1)) x1 = fabs(x1);
+        double x2 = x1;
 
         return {ONE_REAL_ROOT, x1, x2};
     }
@@ -197,7 +190,7 @@ SolutionSquare solve_square(const CoeffsSquare coeffs)
     assert(0 && "undefined discriminant! Unreachable line reached!");
 
     //по-хорошему строчка ниже никогда не должна выполняться, но иначе варнинг
-    return {ERROR, 0, 0};
+    return {(SolveRes) 0, 0, 0};
 }
 
 SolutionLinear solve_linear(const CoeffsLinear coeffs)
@@ -217,11 +210,9 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs)
     {
         double x1 = -coeffs.b/coeffs.a;
 
-        if (!isfinite(x1))
-        {
-            printf("Overflow during computing the lineal root!\n");
-            return {ERROR, 0};
-        }
+        if (!isfinite(x1)) return {ERROR_OVRFL_ROOTS, 0};
+
+        if (is_dbl_zero(x1)) x1 = fabs(x1); //лекарство от -0
 
         return {LINEAL_ROOT, x1};
     }
@@ -241,8 +232,11 @@ void print_square_solution(SolutionSquare solution)
             printf("There are no real roots... And I don't have imagination "
             "to compute complex ones.\n");
             break;
-        case ERROR:
-            printf("Well, some error occurred during solving the equation.\n");
+        case ERROR_OVRFL_ROOTS:
+            printf("Overflow during computing roots detected! Unable to compute roots.\n");
+            break;
+        case ERROR_OVRFL_DISCR:
+            printf("Overflow during computing discriminant detected! Unable to compute roots.\n");
             break;
         case NO_SOLUTION:
             printf("No solution. I guess both a and b are zeros, and c is not zero.\n");
@@ -347,7 +341,8 @@ void run_tests(void)
             case ZERO_REAL_ROOTS:
             case NO_SOLUTION:
             case INFINITE_SOLUTIONS:
-            case ERROR:
+            case ERROR_OVRFL_ROOTS:
+            case ERROR_OVRFL_DISCR:
                 printf("Great, no roots to check in this case. Test passed!\n");
                 break;
             case ONE_REAL_ROOT:
