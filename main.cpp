@@ -4,7 +4,6 @@ SQUARE SOLVER, также известная как квадратка
 (пишу в кодблоксе от Деда)
 Заметки:
 исправить чтобы можно было писать пробелы перед вводом
-парсинг в отдельную функцию (run_tests() запускать из main!!)
 в inline проверку на глобальный код возврата
 ввод тестов из своего файла
 переделать файл с тестами на csv
@@ -130,6 +129,8 @@ void clear_buf(void);
 //все символы до конца строки из from копируются в to
 void echo_line(FILE* from, FILE* to);
 
+#define DEF_CHECK_CURRENT_RETURN_CODE { if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE; }
+
 void print_stars(int number);
 
 int main(int argc, const char *argv[]) // argv[] = (* const argv)
@@ -152,7 +153,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
         }
     }
 
-    if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE;
+    DEF_CHECK_CURRENT_RETURN_CODE
 
     //---
 
@@ -165,7 +166,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
     {
         CoeffsSquare coeffs = get_input();
 
-        if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE;
+        DEF_CHECK_CURRENT_RETURN_CODE
 
         SolutionSquare solution = solve_square(coeffs);
 
