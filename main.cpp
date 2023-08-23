@@ -4,8 +4,6 @@ SQUARE SOLVER, также известная как квадратка
 (пишу в кодблоксе от Деда)
 Заметки:
 исправить чтобы можно было писать пробелы перед вводом
-в inline проверку на глобальный код возврата
-ввод тестов из своего файла
 переделать файл с тестами на csv
 разбиение на файлы
 доки
@@ -18,6 +16,8 @@ SQUARE SOLVER, также известная как квадратка
 #include <math.h>
 #include <assert.h>
 #include <string.h>
+
+#define DEF_CHECK_CURRENT_RETURN_CODE { if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE; }
 
 const char *TESTS_FILE_DEFAULT_NAME = "SquareSolverTests.txt";
 const int MAX_CUSTOM_TEST_FILE_NAME = 100;
@@ -129,7 +129,8 @@ void clear_buf(void);
 //все символы до конца строки из from копируются в to
 void echo_line(FILE* from, FILE* to);
 
-#define DEF_CHECK_CURRENT_RETURN_CODE { if (GLOBAL_CURRENT_RETURN_CODE != NO_ERRORS) return GLOBAL_CURRENT_RETURN_CODE; }
+//пропускает все пробельные символы в вводе
+void skip_spaces(void);
 
 void print_stars(int number);
 
@@ -174,6 +175,7 @@ int main(int argc, const char *argv[]) // argv[] = (* const argv)
 
         printf( "Do you want to continue? [y/n]\n");
 
+        skip_spaces();
         if ((ans = getchar()) == EOF)
         {
             printf("EOF FOUND! SHUTTING DOWN!\n");
@@ -331,6 +333,9 @@ void run_tests(const char test_file_name[])
             "Do you want to continue? [y/n].\n", TESTS_FILE_DEFAULT_NAME);
 
     int ans = 0;
+
+    skip_spaces();
+
     if ((ans = getchar()) == EOF)
     {
         printf("EOF FOUND! SHUTTING DOWN!\n");
@@ -559,6 +564,8 @@ CoeffsSquare get_input(void)
         printf( "Enter real coefficients a, b, c in order "
                 "to get ax^2 + bx + c = 0 solved, for example: \"1.45 5.19 12\".\n");
 
+        skip_spaces();
+
         while (scanf("%lf %lf %lf", &a, &b, &c) != 3)
         {
             printf( "Sorry, I don't see here three real numbers separated by a space. "
@@ -577,6 +584,7 @@ CoeffsSquare get_input(void)
         printf( "You entered: %lg %lg %lg. Is it right? [y/n]\n", a, b, c);
 
         int ans;
+        skip_spaces();
         if ((ans = getchar()) == EOF)
         {
             printf("EOF FOUND! SHUTTING DOWN!\n");
@@ -652,6 +660,14 @@ void echo_line(FILE* from, FILE* to)
 {
     int symbol = 0;
     while ((symbol = fgetc(from)) != '\n') fputc(symbol, to);
+}
+
+void skip_spaces(void)
+{
+    int c;
+    while(isspace(c = getchar()))
+        ;
+    ungetc(c, stdin);
 }
 
 void print_stars(int number)
