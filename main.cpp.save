@@ -4,7 +4,6 @@ SQUARE SOLVER, также известная как квадратка
 (пишу в кодблоксе от Деда)
 Заметки:
 исправить чтобы можно было писать пробелы перед вводом
-переделать TestParams через уже готовые структуры
 парсинг в отдельную функцию (run_tests() запускать из main!!)
 в inline проверку на глобальный код возврата
 ввод тестов из своего файла
@@ -21,7 +20,8 @@ SQUARE SOLVER, также известная как квадратка
 #include <assert.h>
 #include <string.h>
 
-const char *TESTS_FILE_NAME = "SquareSolverTests.txt";
+const char *TESTS_FILE_DEFAULT_NAME = "SquareSolverTests.txt";
+const int MAX_CUSTOM_TEST_FILE_NAME = 100;
 const int STARS_STRIP_WIDTH = 40;
 const double DBL_PRECISION = DBL_EPSILON * 10;
 
@@ -89,6 +89,14 @@ struct TestParams
     SolutionSquare test_sol;
 };
 
+struct CmdFlags // предполагает расширение до нескольких флагов
+{
+    int tests;
+    int cstm_test;
+    int unknown_flags; // ставится в 1 если какой-то флаг не был распознан
+    char test_file_name[MAX_CUSTOM_TEST_FILE_NAME];
+};
+
 //получает коэфф квадратного уравнения и возвращает результат решения с корнями
 SolutionSquare solve_square(const CoeffsSquare coeffs);
 
@@ -98,13 +106,15 @@ SolutionLinear solve_linear(const CoeffsLinear coeffs);
 void print_square_solution(SolutionSquare solution);
 
 //читает тесты из файла, сообщает о результатах прохождения каждого теста
-void run_tests(void);
+void run_tests(const char test_file_name[]);
 
 //выполняет один тест, умеет печатать, но не умеет читать из файла!!!
 TestRes run_one_test(const TestParams params, const int test_num);
 
 //возвращает коэффициенты, старается добиться правильного ввода
 CoeffsSquare get_input(void);
+
+CmdFlags parse_cmd_args(int argc, const char * argv[]);
 
 int are_dbls_equal(double x, double y);
 
@@ -125,17 +135,20 @@ void print_stars(int number);
 int main(int argc, const char *argv[]) // argv[] = (* const argv)
 {
     //парсинг командной строки
+    CmdFlags flags = parse_cmd_args(argc, argv);
 
-    while (--argc) //пропускаем первый аргумент
+    if (flags.unknown_flags) printf("Unknown flags were skipped!\n");
+
+    if (flags.tests)
     {
-        if (strcmp(*(++argv), "-tests") == 0)
+        if (flags.cstm_test)
         {
-            printf("Test flag found, starting tests...\n");
-            run_tests();
+            printf("Custom test file name set: %s\n", flags.test_file_name);
+            run_tests(flags.test_file_name);
         }
         else
         {
-            printf("ERROR: unknown flag: %s. Skipping this flag...\n", *(argv));
+            run_tests(TESTS_FILE_DEFAULT_NAME);
         }
     }
 
@@ -297,11 +310,12 @@ void print_square_solution(SolutionSquare solution)
     }
 }
 
-void run_tests(void)
+void run_tests(const char test_file_name[])
 {
-    printf( "Please create file with name \"%s\" "
+    printf( "If you didn't specify tests file name "
+            "using -cstm-test, please create file with name \"%s\" "
             "in the same folder this program runs in to "
-            "do automatic tests. Every line of the file should include "
+            "do automatic tests. Anyway, every line of the test file should include "
             "three real numbers separated by spaces (square equation coefficients), "
             "solution code (see below) and from zero to two roots (depends on "
             "solution code).\nSolution codes:\n"
@@ -313,7 +327,7 @@ void run_tests(void)
             "INFINITE_SOLUTIONS = 5,\n"
             "ERROR              = 6.\n"
             "Example line: 1 -2 1 1 1\n"
-            "Do you want to continue? [y/n].\n", TESTS_FILE_NAME);
+            "Do you want to continue? [y/n].\n", TESTS_FILE_DEFAULT_NAME);
 
     int ans = 0;
     if ((ans = getchar()) == EOF)
@@ -332,7 +346,7 @@ void run_tests(void)
         return;
     }
 
-    FILE* file_inp = fopen(TESTS_FILE_NAME, "r");
+    FILE* file_inp = fopen(test_file_name, "r");
 
     if (file_inp == NULL)
     {
@@ -380,7 +394,7 @@ void run_tests(void)
 
         //теперь корни если должны были быть прочитаны, то находятся в test_x1 и test_x2
 
-        TestRes testRes = run_one_test( {test_a, test_b, test_c}, {test_sol_code, test_x1, test_x2}, test_num++);
+        TestRes testRes = run_one_test( {{test_a, test_b, test_c}, {(SolveRes) test_sol_code, test_x1, test_x2}}, test_num++);
 
         switch (testRes)
         {
@@ -404,6 +418,8 @@ void run_tests(void)
     {
         printf("End of file reached, so work is done. Number of tests...\n"
         "passed: %d\nfailed: %d\nskipped: %d\ntotal: %d\nGoodbye!\n", passed, failed, skipped, test_num-1);
+        
+        fclose(file_inp);
         return;
     }
     else
@@ -414,6 +430,8 @@ void run_tests(void)
 
         if (test_num > 1) printf("Number of tests before this unreadable line...\n"
         "passed: %d\nfailed: %d\nskipped: %d\ntotal: %d\nGoodbye!\n", passed, failed, skipped, test_num-1);
+
+        fclose(file_inp);
 
         printf("Shutting down. Goodbye!\n");
     }
@@ -436,9 +454,9 @@ TestRes run_one_test(const TestParams params, const int test_num)
 
     //коэффициенты норм
 
-    if (params.test_coeffs.sol_code < SOLVE_RES_MIN_CODE || params.test_coeffs.sol_code > SOLVE_RES_MAX_CODE)
+    if (params.test_sol.res < SOLVE_RES_MIN_CODE || params.test_sol.res > SOLVE_RES_MAX_CODE)
     {
-        printf("Wrong solution code: %d! Skipping this test...\n", params.test_coeffs.sol_code);
+        printf("Wrong solution code: %d! Skipping this test...\n", params.test_sol.res);
 
         print_stars(STARS_STRIP_WIDTH);
         printf("\n");
@@ -449,14 +467,14 @@ TestRes run_one_test(const TestParams params, const int test_num)
 
     //printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
 
-    SolutionSquare fact_sol = solve_square( (CoeffsSquare) { params.test_coeffs.a, params.test_coeffs.b, params.test_coeffs.c } );
+    SolutionSquare fact_sol = solve_square( { params.test_coeffs.a, params.test_coeffs.b, params.test_coeffs.c } );
 
-    if ( (int) fact_sol.res != params.test_coeffs.sol_code)
+    if ( (int) fact_sol.res != params.test_sol.res)
     {
 
         printf("Solution codes don't match! Test solution code: %d, "
-        "in fact solution code: %d. Test FAILED!\n", params.test_sol_code, (int) fact_sol.res);
-        printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+        "in fact solution code: %d. Test FAILED!\n", params.test_sol.res, (int) fact_sol.res);
+        printf("Test params: %lg %lg %lg\n", params.test_coeffs.a, params.test_coeffs.b, params.test_coeffs.c);
 
         print_stars(STARS_STRIP_WIDTH);
         printf("\n");
@@ -468,7 +486,7 @@ TestRes run_one_test(const TestParams params, const int test_num)
 
     TestRes testRes = SKIPPED;
 
-    switch (params.test_sol_code)
+    switch (params.test_sol.res)
     {
         case ZERO_REAL_ROOTS:
         case NO_SOLUTION:
@@ -482,7 +500,7 @@ TestRes run_one_test(const TestParams params, const int test_num)
             break;
         case ONE_REAL_ROOT:
         case LINEAL_ROOT:
-            if (are_dbls_equal(fact_sol.x1, params.test_x1))
+            if (are_dbls_equal(fact_sol.x1, params.test_sol.x1))
             {
                 printf("Test PASSED!\n");
 
@@ -490,17 +508,17 @@ TestRes run_one_test(const TestParams params, const int test_num)
             }
             else
             {
-                printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", params.test_x1, fact_sol.x1);
-                printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+                printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", params.test_sol.x1, fact_sol.x1);
+                printf("Test params: %lg %lg %lg\n", params.test_coeffs.a, params.test_coeffs.b, params.test_coeffs.c);
 
                 testRes = FAILED;
             }
             break;
         case TWO_REAL_ROOTS:
-            if  ( (are_dbls_equal(fact_sol.x1, params.test_x1)
-                   && are_dbls_equal(fact_sol.x2, params.test_x2))
-               || (are_dbls_equal(fact_sol.x1, params.test_x2)
-                   && are_dbls_equal(fact_sol.x2, params.test_x1))
+            if  ( (are_dbls_equal(fact_sol.x1, params.test_sol.x1)
+                   && are_dbls_equal(fact_sol.x2, params.test_sol.x2))
+               || (are_dbls_equal(fact_sol.x1, params.test_sol.x2)
+                   && are_dbls_equal(fact_sol.x2, params.test_sol.x1))
                 )
             {
                 printf("Test PASSED!\n");
@@ -511,8 +529,8 @@ TestRes run_one_test(const TestParams params, const int test_num)
             {
                 printf("Test and fact roots DON'T match! x1: "
                 "%lg and %lg, x2: %lg and %lg. "
-                "Test FAILED!\n", params.test_x1, fact_sol.x1, params.test_x2, fact_sol.x2);
-                printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+                "Test FAILED!\n", params.test_sol.x1, fact_sol.x1, params.test_sol.x2, fact_sol.x2);
+                printf("Test params: %lg %lg %lg\n", params.test_coeffs.a, params.test_coeffs.b, params.test_coeffs.c);
 
                 testRes = FAILED;
             }
@@ -580,6 +598,34 @@ CoeffsSquare get_input(void)
         }
     }
 }
+
+CmdFlags parse_cmd_args(int argc, const char * argv[])
+{
+
+    CmdFlags flags = {0, 0, 0, ""};
+    while (--argc) //пропускаем первый аргумент
+    {
+        if (strcmp(*(++argv), "-tests") == 0)
+        {
+            flags.tests = 1;
+        }
+        else if (flags.tests && (strcmp(*argv, "-cstm-test") == 0))
+        {
+            flags.cstm_test = 1;
+
+            //сразу после должен быть относительный путь до файла
+            strcpy(flags.test_file_name, *(++argv));
+            argc-=1;
+        }
+        else
+        {
+            flags.unknown_flags = 1;
+        }
+    }
+
+    return flags;
+}
+
 
 int are_dbls_equal(double x, double y)
 {
