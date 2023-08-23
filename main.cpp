@@ -331,6 +331,10 @@ void run_tests(void)
         {
             printf("Solution codes don't match! Test solution code: %d, "
             "in fact solution code: %d. Test FAILED!\n", test_sol_code, (int) fact_sol.res);
+
+            print_stars(STARS_STRIP_WIDTH);
+            printf("\n");
+            continue;
         }
 
         //solution code верный
