@@ -33,6 +33,13 @@ enum SolveRes
 const int SOLVE_RES_MIN_CODE = 0; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
 const int SOLVE_RES_MAX_CODE = 6; //ДОЛЖНО ОБНОВЛЯТЬСЯ В СООТВЕТСТВИИ С enum SolveRes
 
+enum TestRes
+{
+    PASSED  = 0,
+    FAILED  = 1,
+    SKIPPED = 2,
+};
+
 struct CoeffsSquare
 {
     double a;
@@ -59,6 +66,16 @@ struct SolutionLinear
     double x;
 };
 
+struct TestParams
+{
+    double test_a;
+    double test_b;
+    double test_c;
+    int test_sol_code;
+    double test_x1;
+    double test_x2;
+};
+
 //получает коэфф квадратного уравнения и возвращает результат решения с корнями
 SolutionSquare solve_square(const CoeffsSquare coeffs);
 
@@ -69,6 +86,9 @@ void print_square_solution(SolutionSquare solution);
 
 //читает тесты из файла, сообщает о результатах прохождения каждого теста
 void run_tests(void);
+
+//выполняет один тест, умеет печатать, но не умеет читать из файла!!!
+TestRes run_one_test(const TestParams params, const int test_num);
 
 //возвращает коэффициенты, старается добиться правильного ввода
 CoeffsSquare get_input(void);
@@ -298,110 +318,11 @@ void run_tests(void)
     int test_sol_code = 0;
     while (fscanf(file_inp, "%lg %lg %lg %d", &test_a, &test_b, &test_c, &test_sol_code) == 4)
     {
-        print_stars(STARS_STRIP_WIDTH);
-        printf("\nTest %d:\n", counter++);
+        //если test_sol_code предполагает что корни должны быть, то нужное число читаем,
+        //и отдаем в run_one_test(), а потом разберемся, совпадает ли
 
-        if ( ( !isfinite(test_a) || !isfinite(test_b) || !isfinite(test_c) ))
-        {
-            printf("Sorry, coefficient(s) is/are out of supported range. "
-            "Skipping this test...\n");
 
-            print_stars(STARS_STRIP_WIDTH);
-            printf("\n");
-            continue;
-        }
 
-        //коэффициенты норм
-
-        if (test_sol_code < SOLVE_RES_MIN_CODE || test_sol_code > SOLVE_RES_MAX_CODE)
-        {
-            printf("Wrong solution code: %d! Skipping this test...\n", test_sol_code);
-
-            print_stars(STARS_STRIP_WIDTH);
-            printf("\n");
-            continue;
-        }
-
-        //solution code нормальный
-
-        printf("Test params: %lg %lg %lg\n", test_a, test_b, test_c);
-
-        SolutionSquare fact_sol = solve_square( (CoeffsSquare) { test_a, test_b, test_c } );
-
-        if ( (int) fact_sol.res != test_sol_code)
-        {
-            printf("Solution codes don't match! Test solution code: %d, "
-            "in fact solution code: %d. Test FAILED!\n", test_sol_code, (int) fact_sol.res);
-
-            print_stars(STARS_STRIP_WIDTH);
-            printf("\n");
-            continue;
-        }
-
-        //solution code верный
-        printf("Solution codes match: %d!\n", test_sol_code);
-
-        switch (test_sol_code)
-        {
-            case ZERO_REAL_ROOTS:
-            case NO_SOLUTION:
-            case INFINITE_SOLUTIONS:
-            case ERROR_OVRFL_ROOTS:
-            case ERROR_OVRFL_DISCR:
-                printf("Great, no roots to check in this case. Test passed!\n");
-                break;
-            case ONE_REAL_ROOT:
-            case LINEAL_ROOT:
-                if (fscanf(file_inp, "%lg", &test_x1) == 1)
-                {
-                    if (are_dbls_equal(fact_sol.x1, test_x1))
-                    {
-                        printf("Test and fact roots match! Great, test passed!\n");
-                    }
-                    else
-                    {
-                        printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", test_x1, fact_sol.x1);
-                    }
-                }
-                else
-                {
-                    printf("This test implies one root, but I can't find a real number in the line:\n");
-                    echo_line(file_inp, stdin);
-                    printf("\nSkipping test...\n");
-                }
-                break;
-            case TWO_REAL_ROOTS:
-                if (fscanf(file_inp, "%lg %lg", &test_x1, &test_x2) == 2)
-                {
-                    if  (
-                        (are_dbls_equal(fact_sol.x1, test_x1) && are_dbls_equal(fact_sol.x2, test_x2))
-                        ||
-                        (are_dbls_equal(fact_sol.x1, test_x2) && are_dbls_equal(fact_sol.x2, test_x1))
-                        )
-                    {
-                        printf("Test and fact roots match! Great, test passed!\n");
-                    }
-                    else
-                    {
-                        printf("Test and fact roots DON'T match! x1: "
-                        "%lg and %lg, x2: %lg and %lg. "
-                        "Test FAILED!\n", test_x1, fact_sol.x1, test_x2, fact_sol.x2);
-                    }
-                }
-                else
-                {
-                    printf("This test implies two roots, but I can't find two real numbers in the line:\n");
-                    echo_line(file_inp, stdin);
-                    printf("\nSkipping test...\n");
-                }
-                break;
-            default:
-                assert(0 && "unreachable default case in switch reached!"); //недопустимый case
-                break;
-        }
-
-        print_stars(STARS_STRIP_WIDTH);
-        printf("\n");
     }
 
     if ( fgetc(file_inp) == EOF )
@@ -412,14 +333,120 @@ void run_tests(void)
     else
     {
         printf("The next line can't be read:\n");
-
-        //int symbol;
-        //while ((symbol = fgetc(file_inp)) != '\n') putchar(symbol);
         echo_line(file_inp, stdin);
         printf("\n");
 
         printf("Shutting down. Goodbye!\n");
     }
+}
+
+TestRes run_one_test(const TestParams params, const int test_num)
+{
+    print_stars(STARS_STRIP_WIDTH);
+    printf("\nTest %d:\n", test_num);
+
+    if ( ( !isfinite(params.test_a) || !isfinite(params.test_b) || !isfinite(params.test_c) ))
+    {
+        printf("Sorry, coefficient(s) is/are out of supported range. "
+        "Skipping this test...\n");
+
+        print_stars(STARS_STRIP_WIDTH);
+        printf("\n");
+        return SKIPPED;
+    }
+
+    //коэффициенты норм
+
+    if (params.test_sol_code < SOLVE_RES_MIN_CODE || params.test_sol_code > SOLVE_RES_MAX_CODE)
+    {
+        printf("Wrong solution code: %d! Skipping this test...\n", params.test_sol_code);
+
+        print_stars(STARS_STRIP_WIDTH);
+        printf("\n");
+        return SKIPPED;
+    }
+
+    //solution code нормальный
+
+    //printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+
+    SolutionSquare fact_sol = solve_square( (CoeffsSquare) { params.test_a, params.test_b, params.test_c } );
+
+    if ( (int) fact_sol.res != params.test_sol_code)
+    {
+
+        printf("Solution codes don't match! Test solution code: %d, "
+        "in fact solution code: %d. Test FAILED!\n", params.test_sol_code, (int) fact_sol.res);
+        printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+
+        print_stars(STARS_STRIP_WIDTH);
+        printf("\n");
+        return FAILED;
+    }
+
+    //solution code верный
+    //printf("Solution codes match: %d!\n", params.test_sol_code);
+
+    TestRes testRes = SKIPPED;
+
+    switch (params.test_sol_code)
+    {
+        case ZERO_REAL_ROOTS:
+        case NO_SOLUTION:
+        case INFINITE_SOLUTIONS:
+        case ERROR_OVRFL_ROOTS:
+        case ERROR_OVRFL_DISCR:
+            printf("Test PASSED!\n");
+
+            testRes = PASSED;
+
+            break;
+        case ONE_REAL_ROOT:
+        case LINEAL_ROOT:
+            if (are_dbls_equal(fact_sol.x1, params.test_x1))
+            {
+                printf("Test PASSED!\n");
+
+                testRes = PASSED;
+            }
+            else
+            {
+                printf("Test and fact roots DON'T match: %lg anf %lg. Test FAILED!\n", params.test_x1, fact_sol.x1);
+                printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+
+                testRes = FAILED;
+            }
+            break;
+        case TWO_REAL_ROOTS:
+            if  (
+                (are_dbls_equal(fact_sol.x1, params.test_x1) && are_dbls_equal(fact_sol.x2, params.test_x2))
+                ||
+                (are_dbls_equal(fact_sol.x1, params.test_x2) && are_dbls_equal(fact_sol.x2, params.test_x1))
+                )
+            {
+                printf("Test PASSED!\n");
+
+                testRes = PASSED;
+            }
+            else
+            {
+                printf("Test and fact roots DON'T match! x1: "
+                "%lg and %lg, x2: %lg and %lg. "
+                "Test FAILED!\n", params.test_x1, fact_sol.x1, params.test_x2, fact_sol.x2);
+                printf("Test params: %lg %lg %lg\n", params.test_a, params.test_b, params.test_c);
+
+                testRes = FAILED;
+            }
+            break;
+        default:
+            assert(0 && "unreachable default case in switch reached!"); //недопустимый case
+            break;
+    }
+
+    print_stars(STARS_STRIP_WIDTH);
+    printf("\n");
+
+    return testRes;
 }
 
 CoeffsSquare get_input(void)
