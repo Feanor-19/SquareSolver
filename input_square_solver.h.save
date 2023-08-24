@@ -1,0 +1,11 @@
+#ifndef INPUT_SQUARE_SOLVER
+#define INPUT_SQUARE_SOLVER
+
+#include "utilities.h"
+
+//! \brief Asks user to enter coefficients for
+//!        the square equation to solve
+//!
+CoeffsSquare get_input(void);
+
+#endif

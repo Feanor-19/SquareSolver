@@ -1,0 +1,25 @@
+#ifndef SQUARE_SOLVER_H
+#define SQUARE_SOLVER_H
+
+#include "utilities.h"
+
+struct CoeffsSquare
+{
+    double a;
+    double b;
+    double c;
+};
+
+struct SolutionSquare
+{
+    SolveRes res;
+    double x1;
+    double x2;
+};
+
+//---
+
+//получает коэфф квадратного уравнения и возвращает результат решения с корнями
+SolutionSquare solve_square(const CoeffsSquare coeffs);
+
+#endif

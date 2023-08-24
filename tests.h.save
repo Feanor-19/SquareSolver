@@ -1,0 +1,30 @@
+#ifndef TESTS_H
+#define TESTS_H
+
+#include "square_solver.h"
+#include "utilities.h"
+
+const char *TESTS_FILE_DEFAULT_NAME = "SquareSolverTests.txt";
+
+enum TestRes
+{
+    PASSED  = 0,
+    FAILED  = 1,
+    SKIPPED = 2,
+};
+
+struct TestParams
+{
+    CoeffsSquare test_coeffs;
+    SolutionSquare test_sol;
+};
+
+//---
+
+//читает тесты из файла, сообщает о результатах прохождения каждого теста
+void run_tests(const char test_file_name[]);
+
+//выполняет один тест, умеет печатать, но не умеет читать из файла!!!
+TestRes run_one_test(const TestParams params, const int test_num);
+
+#endif
