@@ -1,8 +1,16 @@
 #include "tests.h"
 
+/// @brief Holds default name for file containing tests.
 const char *TESTS_FILE_DEFAULT_NAME = "SquareSolverTests.txt";
 
-//выполняет один тест, умеет печатать, но не умеет читать из файла!!!
+/*!
+    @brief Runs one test.
+
+    @param [in] params Params of the test, including coefficients and reference solution.
+    @param [in] test_num Number of test, used in printing.
+
+    @return Result of test as a member of TestRes enum.
+*/
 static TestRes run_one_test(const TestParams params, const int test_num);
 
 void run_tests(const char test_file_name[])

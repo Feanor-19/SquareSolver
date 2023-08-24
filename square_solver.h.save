@@ -2,14 +2,11 @@
 #define SQUARE_SOLVER_H
 
 #include "utilities.h"
+#include "linear_solver.h"
 
-struct CoeffsSquare
-{
-    double a;
-    double b;
-    double c;
-};
-
+/*!
+    @brief Contains 
+*/
 struct SolutionSquare
 {
     SolveRes res;

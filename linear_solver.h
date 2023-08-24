@@ -3,21 +3,32 @@
 
 #include "utilities.h"
 
+/*!
+    @brief Contains coefficients of a linear equation ax + b = 0.
+*/
 struct CoeffsLinear
 {
-    double a;
-    double b;
+    double a; ///< Coefficient a.
+    double b; ///< Coefficient b.
 };
 
+/*!
+    @brief Contains solution of a linear equation ax + b = 0.
+*/
 struct SolutionLinear
 {
-    SolveRes res;
-    double x;
+    SolveRes res;   ///< Solution result code from SolveRes enum.
+    double x;       ///< The root of the equation (if exists).
 };
 
 //---
 
-//получает коэфф линейного уравнения и возвращает результат решения с корнями
+/*!
+    @brief Solves linear equation ax + b = 0.
+
+    @param [in] coeffs Coefficients of the linear equation packed in a struct CoeffsLinear.
+    @return Solution of the linear equation packed in a struct SolutionLinear.
+*/
 SolutionLinear solve_linear(const CoeffsLinear coeffs);
 
 #endif

@@ -1,5 +1,13 @@
 #include "utilities.h"
 
+/*!
+    @brief Used to return needed code from main when error happens in other functions.
+
+    @details It is a global variable seen in every part of the program.
+    It is usually returned by main().
+    Its default value is MainReturnCode::NO_ERRORS, which is equal to 0.
+    It must change only once, and immediately after that control must return to main().
+*/
 MainReturnCode GLOBAL_CURRENT_RETURN_CODE = NO_ERRORS;
 
 void print_stars(int number)
