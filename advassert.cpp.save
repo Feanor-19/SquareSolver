@@ -1,0 +1,14 @@
+#include <stdio.h>
+
+#define SQR(X)
+
+int main()
+{
+    int x = 0;
+    scanf("%d", &x);
+    
+    printf("%d\n", x);
+    printf("!!!%d", )
+    
+    return 0;
+}
