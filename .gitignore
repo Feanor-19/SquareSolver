@@ -2,6 +2,6 @@ Doxyfile
 doxygen
 *.o
 *.exe
-.save
-.bat
+*.save
+*.bat
 latex
