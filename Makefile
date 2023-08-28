@@ -15,10 +15,10 @@ OBJFILES 	= $(SOURCES:.cpp=.o)
 OUT 		= square_solver.exe
 
 $(OUT) : $(OBJFILES)
-	$(CC) -o $@ $(CFLAGS) $^
+	@$(CC) -o $@ $(CFLAGS) $^
 
 %.o : %.cpp
-	$(CC) -c $(CFLAGS) -o $@ $<
+	@$(CC) -c $(CFLAGS) -o $@ $<
 
 .PHONY: clean
 clean:
