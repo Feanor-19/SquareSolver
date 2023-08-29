@@ -10,7 +10,7 @@ CFLAGS = 	-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef \
 			-Wstack-usage=8192 -Wstrict-aliasing -Wstrict-null-sentinel -Wtype-limits \
 			-Wwrite-strings -Werror=vla -D_DEBUG -D_EJUDGE_CLIENT_SIDE
 
-SOURCES 	= $(wildcard *.cpp)
+SOURCES 	= $(wildcard ./src/*.cpp)
 OBJFILES 	= $(SOURCES:.cpp=.o)
 OUT 		= square_solver.exe
 
