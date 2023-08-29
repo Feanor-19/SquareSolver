@@ -1,5 +1,3 @@
-
-
 #include "parser_cmd_args.h"
 #include "input_square_solver.h"
 #include "linear_solver.h"
@@ -8,29 +6,57 @@
 #include "tests.h"
 #include "utilities.h"
 
-int main(int argc, const char *argv[]) // argv[] = (* const argv)
+static const char help_message[] = "No help message as for now :-(";
+static CmdLineFlag flags[] =       {
+                                        {"-h", 0, 0, ""},
+                                        {"-t", 0, 1, ""}
+                                   };
+//не получилось сделать ни дефолтные значения...
+static const size_t HELP = 0, TESTS = 1;
+
+
+int main(int argc, const char *argv[])
 {
     GLOBAL_CURRENT_RETURN_CODE = NO_ERRORS;
 
-    //парсинг командной строки
-    CmdFlags flags = parse_cmd_args(argc, argv);
-
-    if (flags.unknown_flags) printf("Unknown flags were skipped!\n");
-
-    if (flags.tests)
+    if (argc > 1)
     {
-        if (flags.cstm_test)
+        //парсинг командной строки
+        int skipped_args = parse_cmd_args(  argc,
+                                            argv,
+                                            sizeof(flags)/sizeof(flags[0]),
+                                            flags );
+
+        if (skipped_args != 0) printf("%d unknown flag(s) was/were skipped!\n", skipped_args);
+
+        if (flags[HELP].state)
         {
-            printf("Custom test file name set: %s\n", flags.test_file_name);
-            run_tests(flags.test_file_name);
+            printf("%s", help_message);
+            return GLOBAL_CURRENT_RETURN_CODE;
         }
-        else
+
+        //printf("state = %d\n", flags[TESTS].state);
+
+        if (flags[TESTS].state)
         {
-            run_tests(TESTS_FILE_DEFAULT_NAME);
+            if ( ((flags[TESTS]).add_arg)[0] != '\0' )
+            {
+                //add_arg не пустой, значит было указано имя тестового файла
+                printf("Custom test file name set: %s\n", flags[TESTS].add_arg);
+                run_tests(flags[TESTS].add_arg);
+                return GLOBAL_CURRENT_RETURN_CODE;
+            }
+            else
+            {
+                run_tests(TESTS_FILE_DEFAULT_NAME);
+                return GLOBAL_CURRENT_RETURN_CODE;
+            }
+
+            assert(0 && "Unreachable line!");
         }
     }
 
-    DEF_CHECK_CURRENT_RETURN_CODE
+    DEF_CHECK_CURRENT_RETURN_CODE;
 
     //---
 

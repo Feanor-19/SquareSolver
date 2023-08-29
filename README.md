@@ -8,8 +8,8 @@ Type in terminal: `.\square_solver.exe`
 
 ### Available flags:
 
-1. `-t` - enables tests. Tests are read from default file "SquareSolverTests.txt".
-2. `-cstm-tests` - works only with `-t` enabled. Enter name of your file with tests.
+1. `-h` - prints help.
+2. `-t` - enables tests. If no file name is specified, tests are read from default file "SquareSolverTests.txt".
 
 ### Available return values:
 

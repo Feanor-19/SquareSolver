@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Feanor\\Programming\\GitHub_Repositories\\SquareSolver",
+            "binaryPath": "c:\\Feanor\\Programming\\GitHub_Repositories\\SquareSolver\\square_solver.exe",
+            "binaryArgs": []
+        }
+    ]
+}

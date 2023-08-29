@@ -2,26 +2,30 @@
 #define PARSER_CMD_ARGS_H
 
 #include "utilities.h"
-#include "string.h"
+#include <string.h>
+//#include "mystring.h"
 
-/*!
-    @brief Contains all supported command line flags and some necessary fields.
-*/
-struct CmdFlags // предполагает расширение до нескольких флагов
+//! @brief Maximum length for additional argument (see struct CmdLineFlags)
+const size_t MAX_ADD_ARG_LEN = 101;
+
+//! @brief Represents one command line flag.
+//! @note Some flags require some string to be passed right after them. This string is stored as additional argument.
+struct CmdLineFlag
 {
-    int tests;                         ///< flag: turns on tests mode
-    int cstm_test;                     ///< flag: allows to specify custom file with tests, its name must be placed afterwards
-    int unknown_flags;                 ///< sets to 1 if unknown flags are met
-    char test_file_name[MAX_CUSTOM_TEST_FILE_NAME]; ///< if -cstm-test, here the custom name is stored
+    const char *flag;        //!< The flag as a string, e.g. "-h"
+    int state;                  //!< State of flag.
+    int needs_add_arg;          //!< Must be set 1 if flag needs additional argument.
+    char add_arg[MAX_ADD_ARG_LEN];  //!< Additional argument.
 };
 
-//---
 /*!
-    @brief Parse command line arguments.
-
-    @param argc Like in main().
-    @param argv Like in main().
+    @brief Parses command line arguments.
+    @param [in] argc Number of all arguments passed, like in main(int argc, const char *argv[]).
+    @param [in] argv Passed arguments as array of strings, like in main(int argc, const char *argv[]).
+    @param [in] n_flags Number of supported flags.
+    @param [in/out] flags Array of structs CmdLineFlag. Its length must be equal to n_flags.
+    @return 0 if no errors occurred, number of read unsupported flags otherwise.
 */
-CmdFlags parse_cmd_args(int argc, const char * argv[]);
+int parse_cmd_args(int argc, const char * argv[], size_t n_flags, CmdLineFlag flags[]);
 
 #endif
