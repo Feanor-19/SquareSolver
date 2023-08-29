@@ -23,7 +23,7 @@ struct CmdLineFlag
     @param [in] argc Number of all arguments passed, like in main(int argc, const char *argv[]).
     @param [in] argv Passed arguments as array of strings, like in main(int argc, const char *argv[]).
     @param [in] n_flags Number of supported flags.
-    @param [in/out] flags Array of structs CmdLineFlag. Its length must be equal to n_flags.
+    @param [out] flags Array of structs CmdLineFlag. Its length must be equal to n_flags.
     @return 0 if no errors occurred, number of read unsupported flags otherwise.
 */
 int parse_cmd_args(int argc, const char * argv[], size_t n_flags, CmdLineFlag flags[]);
