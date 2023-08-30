@@ -11,7 +11,7 @@ static CmdLineFlag flags[] =       {
                                         {"-h", 0, 0, ""},
                                         {"-t", 0, 1, ""}
                                    };
-//не получилось сделать ни дефолтные значения...
+
 static const size_t HELP = 0, TESTS = 1;
 
 
